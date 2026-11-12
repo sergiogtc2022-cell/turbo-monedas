@@ -33,6 +33,7 @@ function primeTTS(){ // Android necesita "despertar" la voz con un toque del usu
 function say(force){
   if(!cfg.voice&&!force)return;
   if(voiceBuf&&ac){try{const src=ac.createBufferSource(),g=ac.createGain();g.gain.value=1.2;src.buffer=voiceBuf;src.connect(g).connect(ac.destination);src.start();return;}catch(_){}}
+  if(window.AndroidVoz){try{if(window.AndroidVoz.hablar('¡Ora, zombi!'))return;}catch(_){}}   // voz nativa en la app Android
   if(!window.speechSynthesis)return;
   try{speechSynthesis.cancel();speechSynthesis.resume();
     const u=new SpeechSynthesisUtterance('¡Ora, zombi!');u.lang=esVoice?esVoice.lang:'es-MX';if(esVoice)u.voice=esVoice;

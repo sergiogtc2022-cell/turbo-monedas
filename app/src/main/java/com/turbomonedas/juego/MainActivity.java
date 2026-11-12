@@ -4,23 +4,30 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.util.Locale;
+
 /**
  * Contenedor del juego: muestra assets/index.html en pantalla completa
- * y abre la galería cuando el juego pide la foto del personaje.
+ * abre la galería cuando el juego pide una foto o un audio, y presta la voz
+ * del teléfono (TextToSpeech) para que el personaje hable.
  */
 public class MainActivity extends Activity {
 
     private static final int SOLICITUD_FOTO = 1001;
     private WebView webView;
     private ValueCallback<Uri[]> callbackFoto;
+    private TextToSpeech voz;
+    private boolean vozLista = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +43,16 @@ public class MainActivity extends Activity {
         ajustes.setMediaPlaybackRequiresUserGesture(false);
         ajustes.setAllowFileAccess(true);
 
+        voz = new TextToSpeech(this, estado -> {
+            if (estado != TextToSpeech.SUCCESS) return;
+            int r = voz.setLanguage(new Locale("es", "MX"));
+            if (r < 0) r = voz.setLanguage(new Locale("es"));
+            vozLista = r >= 0;
+            voz.setPitch(1.2f);
+            voz.setSpeechRate(1.1f);
+        });
+        webView.addJavascriptInterface(new PuenteVoz(), "AndroidVoz");
+
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
             @Override
@@ -46,11 +63,24 @@ public class MainActivity extends Activity {
                 }
                 callbackFoto = callback;
 
+                // El juego pide "image/*" para la foto o "audio/*" para la grabación
+                String tipo = "image/*";
+                String titulo = "Elige tu foto";
+                String[] aceptados = params.getAcceptTypes();
+                if (aceptados != null) {
+                    for (String a : aceptados) {
+                        if (a != null && a.trim().startsWith("audio")) {
+                            tipo = "audio/*";
+                            titulo = "Elige tu grabación";
+                            break;
+                        }
+                    }
+                }
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("image/*");
+                intent.setType(tipo);
                 try {
-                    startActivityForResult(Intent.createChooser(intent, "Elige tu foto"), SOLICITUD_FOTO);
+                    startActivityForResult(Intent.createChooser(intent, titulo), SOLICITUD_FOTO);
                 } catch (Exception e) {
                     callbackFoto = null;
                     return false;
@@ -104,8 +134,19 @@ public class MainActivity extends Activity {
         webView.onResume();
     }
 
+    /** Lo que el juego puede llamar desde JavaScript como window.AndroidVoz.hablar("..."). */
+    private class PuenteVoz {
+        @JavascriptInterface
+        public boolean hablar(String texto) {
+            if (!vozLista) return false;
+            voz.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "frase");
+            return true;
+        }
+    }
+
     @Override
     protected void onDestroy() {
+        if (voz != null) voz.shutdown();
         webView.destroy();
         super.onDestroy();
     }
