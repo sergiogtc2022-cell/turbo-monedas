@@ -60,21 +60,32 @@ const PixelArt=(()=>{
     for(let y=-ry;y<=ry;y++){const dx=Math.floor(rx*Math.sqrt(Math.max(0,1-(y*y)/(ry*ry)))+0.3);g.fillRect(Math.round(cx-dx),Math.round(cy+y),dx*2+1,1);}
   }
 
-  // ---------- personaje chibi (cabeza grande; pies en 0, hombros en -10) ----------
-  // La cabeza mide casi lo mismo que el cuerpo para que la cara tenga espacio. Con foto, la cara se pinta
-  // en alta resolución encima del pixel art (ver cabezaHD) para que se distinga.
-  const CABEZA={y:-19,r:9};
-  const POSE={
-    parado:  {p:[[-1,-5,-2,0],[1,-5,2,0]],          b:[[-3,-10,-5,-5],[3,-10,5,-5]]},
-    caminaA: {p:[[0,-5,3,0],[0,-5,-3,0]],           b:[[-3,-10,-6,-6],[3,-10,6,-7]]},
-    caminaB: {p:[[0,-5,1,-3],[1,-3,1,0],[0,-5,-1,0]],b:[[-3,-10,-2,-5],[3,-10,2,-5]]},
-    salto:   {p:[[0,-5,3,-3],[3,-3,1,-1],[0,-5,-2,-2],[-2,-2,-3,0]],b:[[3,-10,10,-22],[-3,-10,-7,-7]],punos:[[11,-24]]},
-    cae:     {p:[[-1,-5,-3,0],[1,-5,3,-1]],          b:[[-3,-10,-11,-14],[3,-10,11,-14]]},
-    golpe:   {p:[[-1,-5,-3,0],[1,-5,2,0]],           b:[[-3,-10,-9,-8],[3,-10,10,-13]],boca:'o'},
-    llama:   {p:[[-1,-5,-2,0],[1,-5,2,0]],           b:[[-3,-10,-5,-5],[3,-10,10,-13],[10,-13,10,-17]]},
-    monta:   {p:[[0,-5,4,-4],[4,-4,4,-1]],           b:[[2,-10,7,-7]]},
-    victoria:{p:[[-1,-5,-3,0],[1,-5,3,0]],           b:[[-3,-10,-10,-21],[3,-10,10,-21]],punos:[[-11,-23],[11,-23]],boca:'sonrisa'}
+  // ---------- personaje (pies en 0); dos estilos que se eligen en Configuración ----------
+  // chibi: cabeza casi del tamaño del cuerpo para que la cara tenga espacio. normal: proporciones clásicas.
+  // Con foto, la cara se pinta en alta resolución encima del pixel art (ver cabezaHD) para que se distinga.
+  const CUERPOS={
+    chibi:{cabeza:{y:-19,r:9},torso:-10,tope:-29,montaY:-11,pose:{
+      parado:  {p:[[-1,-5,-2,0],[1,-5,2,0]],          b:[[-3,-10,-5,-5],[3,-10,5,-5]]},
+      caminaA: {p:[[0,-5,3,0],[0,-5,-3,0]],           b:[[-3,-10,-6,-6],[3,-10,6,-7]]},
+      caminaB: {p:[[0,-5,1,-3],[1,-3,1,0],[0,-5,-1,0]],b:[[-3,-10,-2,-5],[3,-10,2,-5]]},
+      salto:   {p:[[0,-5,3,-3],[3,-3,1,-1],[0,-5,-2,-2],[-2,-2,-3,0]],b:[[3,-10,10,-22],[-3,-10,-7,-7]],punos:[[11,-24]]},
+      cae:     {p:[[-1,-5,-3,0],[1,-5,3,-1]],          b:[[-3,-10,-11,-14],[3,-10,11,-14]]},
+      golpe:   {p:[[-1,-5,-3,0],[1,-5,2,0]],           b:[[-3,-10,-9,-8],[3,-10,10,-13]],boca:'o'},
+      llama:   {p:[[-1,-5,-2,0],[1,-5,2,0]],           b:[[-3,-10,-5,-5],[3,-10,10,-13],[10,-13,10,-17]]},
+      monta:   {p:[[0,-5,4,-4],[4,-4,4,-1]],           b:[[2,-10,7,-7]]},
+      victoria:{p:[[-1,-5,-3,0],[1,-5,3,0]],           b:[[-3,-10,-10,-21],[3,-10,10,-21]],punos:[[-11,-23],[11,-23]],boca:'sonrisa'}}},
+    normal:{cabeza:{y:-18,r:5},torso:-13,tope:-25,montaY:-12,pose:{
+      parado:  {p:[[-1,-6,-2,0],[1,-6,2,0]],          b:[[-3,-12,-4,-7],[3,-12,4,-7]]},
+      caminaA: {p:[[0,-6,3,0],[0,-6,-3,0]],           b:[[-3,-12,-5,-8],[3,-12,5,-9]]},
+      caminaB: {p:[[0,-6,1,-3],[1,-3,1,0],[0,-6,-1,0]],b:[[-3,-12,-2,-7],[3,-12,2,-7]]},
+      salto:   {p:[[0,-6,3,-4],[3,-4,1,-2],[0,-6,-2,-3],[-2,-3,-3,-1]],b:[[2,-12,3,-23],[-3,-12,-5,-9]],punos:[[3,-24]]},
+      cae:     {p:[[-1,-6,-3,0],[1,-6,3,-1]],          b:[[-3,-12,-7,-15],[3,-12,7,-15]]},
+      golpe:   {p:[[-1,-6,-3,0],[1,-6,2,0]],           b:[[-3,-12,-7,-10],[3,-12,6,-16]],boca:'o'},
+      llama:   {p:[[-1,-6,-2,0],[1,-6,2,0]],           b:[[-3,-12,-4,-7],[3,-12,5,-15],[5,-15,3,-17]]},
+      monta:   {p:[[0,-6,4,-5],[4,-5,4,-1]],           b:[[2,-12,6,-9]]},
+      victoria:{p:[[-1,-6,-3,0],[1,-6,3,0]],           b:[[-3,-12,-5,-20],[3,-12,5,-20]],punos:[[-5,-21],[5,-21]],boca:'sonrisa'}}}
   };
+  const cuerpo=()=>CUERPOS[cfg.personaje]||CUERPOS.chibi;
   // Cara preparada: recorte circular, niveles automáticos (estira del 2% al 98% de luz) y más saturación
   let caraLista=null,caraOrigen=null;
   function caraHD(){
@@ -126,29 +137,30 @@ const PixelArt=(()=>{
       g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
       g.drawImage(foto,-Math.round(w/2),-h,w,h);g.restore();return;
     }
-    const m=POSE[pose]||POSE.parado,HY=CABEZA.y,HR=CABEZA.r;
+    const C=cuerpo(),m=C.pose[pose]||C.pose.parado,HY=C.cabeza.y,HR=C.cabeza.r,TY=C.torso;
     g.save();g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
     const lineas=(segs,col,w)=>{for(const s of segs)linea(g,s[0],s[1],s[2],s[3],col,w);};
     // contorno oscuro
     lineas(m.p,PALETA.k,4);lineas(m.b,PALETA.k,4);
-    g.fillStyle=PALETA.k;g.fillRect(-4,-11,8,8);
+    g.fillStyle=PALETA.k;g.fillRect(-4,TY-1,8,-TY-2);
     for(const p of (m.punos||[]))circulo(g,p[0],p[1],3,PALETA.k);
     // colores
     lineas(m.p,'#2038ec',2);
     g.fillStyle='#7c3c00';for(const s of m.p)if(s[3]>=-1)g.fillRect(Math.round(s[2])-1,-1,3,1);
-    g.fillStyle='#d82800';g.fillRect(-3,-10,6,6);
+    g.fillStyle='#d82800';g.fillRect(-3,TY,6,-TY-4);
     lineas(m.b,'#f8b878',2);
     for(const p of (m.punos||[]))circulo(g,p[0],p[1],2,'#f8b878');
     if(faceCanvas){
       if(cola)cola.push({x:Math.round(x),y:Math.round(y)+HY,r:HR,dir,alpha:g.globalAlpha});
       else{g.restore();cabezaHD(g,Math.round(x),Math.round(y)+HY,HR,dir,g.globalAlpha);return;}
     } else {
+      const k=v=>Math.round(v*HR/9);   // la cara por default se escala con el tamaño de la cabeza
       circulo(g,0,HY,HR+1,PALETA.k);circulo(g,0,HY,HR,'#f8b878');
-      g.fillStyle='#5a2e0e';g.fillRect(-8,HY-9,16,5);g.fillRect(-9,HY-5,4,6);
-      g.fillStyle=PALETA.k;g.fillRect(4,HY-1,2,3);
-      if(m.boca==='o')g.fillRect(4,HY+5,3,3);else if(m.boca==='sonrisa'){g.fillRect(2,HY+5,5,1);g.fillRect(1,HY+4,1,1);g.fillRect(7,HY+4,1,1);}else g.fillRect(3,HY+5,4,1);
-      if(Progreso.equipo('gorra')){g.fillStyle='#1565c0';g.fillRect(-9,HY-10,18,5);g.fillRect(4,HY-6,8,2);}
-      if(Progreso.equipo('lentes')){g.fillStyle=PALETA.k;g.fillRect(1,HY-2,8,3);}
+      g.fillStyle='#5a2e0e';g.fillRect(k(-8),HY+k(-9),k(16),k(5));g.fillRect(k(-9),HY+k(-5),Math.max(2,k(4)),k(6));
+      g.fillStyle=PALETA.k;g.fillRect(k(4),HY-1,Math.max(1,k(2)),2);
+      if(m.boca==='o')g.fillRect(k(4),HY+k(5),2,2);else if(m.boca==='sonrisa')g.fillRect(k(2),HY+k(5),Math.max(3,k(5)),1);else g.fillRect(k(3),HY+k(5),Math.max(2,k(4)),1);
+      if(Progreso.equipo('gorra')){g.fillStyle='#1565c0';g.fillRect(-HR,HY-HR-1,HR*2,k(5)+1);g.fillRect(k(4),HY+k(-6),k(8),2);}
+      if(Progreso.equipo('lentes')){g.fillStyle=PALETA.k;g.fillRect(k(1),HY+k(-2),k(8),2);}
     }
     g.restore();
   }
@@ -197,5 +209,5 @@ const PixelArt=(()=>{
     g.fillStyle=PALETA.k;g.fillRect(x-1,y+1,14,6);circulo(g,x+1,y+2,3,PALETA.k);circulo(g,x+1,y+6,3,PALETA.k);circulo(g,x+11,y+2,3,PALETA.k);circulo(g,x+11,y+6,3,PALETA.k);
     g.fillStyle='#fff8e1';g.fillRect(x,y+2,12,4);circulo(g,x+1,y+2,2,'#fff8e1');circulo(g,x+1,y+6,2,'#fff8e1');circulo(g,x+11,y+2,2,'#fff8e1');circulo(g,x+11,y+6,2,'#fff8e1');
   }
-  return {tiles,sprite,linea,circulo,elipse,heroe,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
+  return {tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
 })();

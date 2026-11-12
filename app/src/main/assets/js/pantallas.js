@@ -26,6 +26,8 @@ function cfgHTML(){
     <button class="pill" data-a="swap">${cfg.swap?'Invertidos':'Normales'}</button></div>
   <div class="opt"><b>Música<span>Melodías de cada nivel y efectos de poderes</span></b>
     <button class="pill ${cfg.musica?'':'off'}" data-a="musica">${cfg.musica?'Sí':'No'}</button></div>
+  <div class="opt"><b>Personaje del nivel pixel art<span>${cfg.personaje==='normal'?'Proporciones clásicas, cabeza chica':'Cabeza grande para que se vea bien tu cara'}</span></b></div>
+  <div class="modes"><button class="pill ${cfg.personaje!=='normal'?'':'off'}" data-a="pj-chibi">😀 Cabezón</button><button class="pill ${cfg.personaje==='normal'?'':'off'}" data-a="pj-normal">🧍 Normal</button></div>
   <div class="opt"><b>Volumen de la música</b><input type="range" id="vol" min="0" max="1" step="0.05" value="${cfg.volumen}" style="width:45%"></div>
   <div class="opt"><b>Volante del Gran Premio<span>${cfg.volante==='inclinar'?'Inclinas el celular como volante':'Arrastras el dedo: más lejos = gira más'}</span></b></div>
   <div class="modes"><button class="pill ${cfg.volante==='dedo'?'':'off'}" data-a="vol-dedo">👆 Dedo</button><button class="pill ${cfg.volante==='inclinar'?'':'off'}" data-a="vol-inclinar">📱 Inclinar</button>
@@ -169,6 +171,7 @@ overlay.addEventListener('click',e=>{
   if(a==='cfg'){view='cfg';showOverlay();return;}
   if(a==='fotos'||a==='niveles'||a==='tienda'||a==='records'||a==='minijuegos'){view=a;if(state==='win')state='menu';showOverlay();return;}
   if(a==='musica'){cfg.musica=!cfg.musica;saveCfg();Musica.volumen();showOverlay();return;}
+  if(a.startsWith('pj-')){cfg.personaje=a.slice(3);saveCfg();showOverlay();return;}
   if(a.startsWith('vol-')){cfg.volante=a.slice(4);saveCfg();showOverlay();return;}
   if(a==='inclinv'){cfg.inclInv=!cfg.inclInv;saveCfg();showOverlay();return;}
   if(a.startsWith('buy-')||a.startsWith('eq-')){const m=accionTienda(a);showOverlay();const t=document.getElementById('tmsg');if(t)t.textContent=m;return;}

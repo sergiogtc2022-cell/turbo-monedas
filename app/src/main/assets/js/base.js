@@ -10,7 +10,7 @@ addEventListener('resize',resize);resize();
 
 // ---------- Estado ----------
 // ---------- Configuración ----------
-let cfg={swap:false,voice:true,mode:'touch',car:'sedan',musica:true,volumen:0.7,volante:'dedo',inclInv:false};
+let cfg={swap:false,voice:true,mode:'touch',car:'sedan',musica:true,volumen:0.7,volante:'dedo',inclInv:false,personaje:'chibi'};
 try{const c=JSON.parse(localStorage.getItem('tm_cfg')||'null');if(c)cfg=Object.assign(cfg,c);}catch(_){}
 function saveCfg(){try{localStorage.setItem('tm_cfg',JSON.stringify(cfg))}catch(_){}applyCfg();}
 function applyCfg(){document.body.classList.toggle('swap',cfg.swap);document.body.classList.toggle('nobtn',cfg.mode!=='buttons');}

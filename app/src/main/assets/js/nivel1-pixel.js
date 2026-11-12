@@ -73,16 +73,16 @@ const Nivel1Pixel=(()=>{
     if(kiara&&!kiara.montada){const k=kiara;PixelArt.kiara(lx,poseKiara(k),Math.round((k.x+k.w/2)/2)-camL,Math.round((k.y+k.h)/2),k.face,k.modo==='grande'?2:1);
       if(k.ladra>0){lx.fillStyle='#ffffff';const bx=Math.round((k.x+k.w/2)/2)-camL+k.face*12,by=Math.round(k.y/2);for(let i=1;i<=3;i++){const r=i*4+(24-k.ladra)/3;
         for(let a=-0.6;a<=0.6;a+=0.15)lx.fillRect(Math.round(bx+Math.cos(a)*r*k.face),Math.round(by+Math.sin(a)*r),1,1);}}}
-    // jugador (cabeza grande estilo chibi)
+    // jugador (estilo chibi o normal según Configuración)
     const hx=Math.round((P.x+P.w/2)/2)-camL,hy=Math.round((P.y+P.h)/2);
     if(!(P.inv>0&&Math.floor(P.inv/4)%2)){
-      if(kiaraMontada()){PixelArt.kiara(lx,poseKiara(kiara),hx,hy,P.face,2);PixelArt.heroe(lx,'monta',hx-P.face*2,hy-11,P.face);}
+      if(kiaraMontada()){PixelArt.kiara(lx,poseKiara(kiara),hx,hy,P.face,2);PixelArt.heroe(lx,'monta',hx-P.face*2,hy+PixelArt.cuerpo().montaY,P.face);}
       else{
         if(P.pm>=6&&Math.abs(P.vx)>5&&Math.floor(frames/3)%2){lx.globalAlpha=0.4;PixelArt.heroe(lx,poseJugador(),hx-P.face*6,hy,P.face);lx.globalAlpha=1;}
         PixelArt.heroe(lx,P.derrape?'golpe':poseJugador(),hx,hy,P.face);
         if(P.derrape&&frames%4===0)parts.push({x:P.x+P.w/2,y:P.y+P.h-2,vx:-P.face*0.5,vy:-0.6,life:14,color:'#e0e0e0',g:0,r:2});
       }
-      if(P.aturdido>0){lx.fillStyle='#ffeb3b';for(let i=0;i<3;i++){const a=P.aturdido*0.15+i*2.09;lx.fillRect(Math.round(hx+Math.cos(a)*7),Math.round(hy-31+Math.sin(a)*2),2,2);}}
+      if(P.aturdido>0){lx.fillStyle='#ffeb3b';for(let i=0;i<3;i++){const a=P.aturdido*0.15+i*2.09;lx.fillRect(Math.round(hx+Math.cos(a)*7),Math.round(hy+PixelArt.cuerpo().tope-2+Math.sin(a)*2),2,2);}}
     }
     for(const p of parts){lx.globalAlpha=Math.min(1,p.life/20);lx.fillStyle=p.color;const s=p.r>4?3:2;lx.fillRect(Math.round(p.x/2)-camL,Math.round(p.y/2),s,s);}
     lx.globalAlpha=1;
@@ -92,7 +92,7 @@ const Nivel1Pixel=(()=>{
     cx.drawImage(lc,0,0,lw,lh,0,0,lw*2*scale,lh*2*scale);
     cx.imageSmoothingEnabled=true;
     PixelArt.dibujarCabezas(cx,2*scale);   // la cara con foto va en alta resolución, sobre el pixel art
-    if(bubble>0)drawSpeech((P.x+P.w/2-cam)*scale,(P.y-30)*scale,bubble);
+    if(bubble>0)drawSpeech((P.x+P.w/2-cam)*scale,(P.y+P.h+PixelArt.cuerpo().tope*2)*scale,bubble);
     hud();
   }
   // Barra inferior estilo consola clásica, con el medidor P (se llena al correr)
