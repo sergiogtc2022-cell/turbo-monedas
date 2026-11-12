@@ -31,6 +31,8 @@ function cfgHTML(){
   ${voiceData?'<button class="btn" data-a="delvoice">🗑 Quitar mi grabación</button>':''}
   <div class="msg" id="vmsg"></div>
   <button class="btn" data-a="testvoice">🔊 Probar voz</button>
+  ${window.AndroidApp?`<div class="opt" style="margin-top:6px"><b>Versión instalada<span>${AndroidApp.version()}</span></b></div>
+  <button class="btn" data-a="update">🔄 Buscar actualizaciones</button>`:''}
   <button class="btn go" data-a="back">✔ Listo</button>`;
 }
 function showOverlay(){
@@ -81,6 +83,7 @@ overlay.addEventListener('click',e=>{
   if(a==='swap'){cfg.swap=!cfg.swap;saveCfg();showOverlay();return;}
   if(a==='voice'){cfg.voice=!cfg.voice;saveCfg();showOverlay();return;}
   if(a==='testvoice'){say(true);return;}
+  if(a==='update'){try{AndroidApp.buscarActualizacion();}catch(_){}return;}
   if(a==='delvoice'){voiceData=null;voiceBuf=null;try{localStorage.removeItem('tm_voice')}catch(_){}showOverlay();return;}
   if(a==='back'){view='';showOverlay();return;}
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}

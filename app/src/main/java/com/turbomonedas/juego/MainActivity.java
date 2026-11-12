@@ -28,6 +28,7 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> callbackFoto;
     private TextToSpeech voz;
     private boolean vozLista = false;
+    private Actualizador actualizador;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +53,10 @@ public class MainActivity extends Activity {
             voz.setSpeechRate(1.1f);
         });
         webView.addJavascriptInterface(new PuenteVoz(), "AndroidVoz");
+
+        actualizador = new Actualizador(this);
+        webView.addJavascriptInterface(new PuenteApp(), "AndroidApp");
+        webView.postDelayed(() -> actualizador.buscar(false), 3000);   // revisa al abrir
 
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient() {
@@ -132,6 +137,7 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         webView.onResume();
+        if (actualizador != null) actualizador.alRegresar();
     }
 
     /** Lo que el juego puede llamar desde JavaScript como window.AndroidVoz.hablar("..."). */
@@ -144,8 +150,22 @@ public class MainActivity extends Activity {
         }
     }
 
+    /** Versión instalada y búsqueda manual de actualizaciones (botón en Configuración). */
+    private class PuenteApp {
+        @JavascriptInterface
+        public String version() {
+            return actualizador.versionTexto();
+        }
+
+        @JavascriptInterface
+        public void buscarActualizacion() {
+            actualizador.buscar(true);
+        }
+    }
+
     @Override
     protected void onDestroy() {
+        if (actualizador != null) actualizador.cerrar();
         if (voz != null) voz.shutdown();
         webView.destroy();
         super.onDestroy();
