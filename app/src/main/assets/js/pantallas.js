@@ -27,7 +27,7 @@ function cfgHTML(){
   <div class="opt"><b>Voz "¡Ora, zombie!"<span>Cuando un enemigo o un auto te choca</span></b>
     <button class="pill ${cfg.voice?'':'off'}" data-a="voice">${cfg.voice?'Sí':'No'}</button></div>
   <div class="opt" style="margin-top:6px"><b>Tu propia voz<span>${voiceData?'Usando tu grabación':'Graba "¡Ora, zombie!" con la grabadora del celular y elígela aquí'}</span></b></div>
-  <label class="btn" for="vfile">🎙 ${voiceData?'Cambiar grabación':'Elegir grabación'}<input type="file" accept="audio/*,.m4a,.mp3,.ogg,.opus,.wav,.aac,.3gp,.amr,.webm,.mp4" id="vfile"></label>
+  <label class="btn" for="vfile">🎙 ${voiceData?'Cambiar grabación':'Elegir grabación'}<input type="file" accept="audio/*" id="vfile"></label>
   ${voiceData?'<button class="btn" data-a="delvoice">🗑 Quitar mi grabación</button>':''}
   <div class="msg" id="vmsg"></div>
   <button class="btn" data-a="testvoice">🔊 Probar voz</button>

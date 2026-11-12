@@ -69,23 +69,26 @@ public class MainActivity extends Activity {
                 callbackFoto = callback;
 
                 // El juego pide "image/*" para la foto o "audio/*" para la grabación
-                String tipo = "image/*";
-                String titulo = "Elige tu foto";
                 String[] aceptados = params.getAcceptTypes();
-                if (aceptados != null) {
-                    for (String a : aceptados) {
-                        if (a != null && a.trim().startsWith("audio")) {
-                            tipo = "audio/*";
-                            titulo = "Elige tu grabación";
-                            break;
-                        }
-                    }
+                String pedido = aceptados == null ? "" : String.join(",", aceptados).toLowerCase();
+                boolean esAudio = pedido.contains("audio") || pedido.contains(".m4a") || pedido.contains(".mp3");
+                Intent intent;
+                String titulo;
+                if (esAudio) {
+                    // Selector de documentos del sistema: muestra Descargas, Grabaciones, etc., nunca la galería
+                    intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("audio/*");
+                    intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"audio/*", "application/ogg", "video/mp4"});
+                    titulo = "Elige tu grabación";
+                } else {
+                    intent = new Intent(Intent.ACTION_GET_CONTENT);
+                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+                    intent.setType("image/*");
+                    titulo = "Elige tu foto";
                 }
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType(tipo);
                 try {
-                    startActivityForResult(Intent.createChooser(intent, titulo), SOLICITUD_FOTO);
+                    startActivityForResult(esAudio ? intent : Intent.createChooser(intent, titulo), SOLICITUD_FOTO);
                 } catch (Exception e) {
                     callbackFoto = null;
                     return false;
