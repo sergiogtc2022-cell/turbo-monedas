@@ -17,7 +17,8 @@ Se instala encima del anterior sin perder fotos ni configuración.
 
 - `app/src/main/assets/index.html` y `app/src/main/assets/js/` — el juego (HTML + JavaScript)
   - `base.js` pantalla, configuración, sonido y controles
-  - `voces.js` frases del personaje (¡Ora, zombie!, ¡Chocamos!, ¡Kiara, ven!, huesito, caída, ¡Moshi moshi!): grabación propia o voz del teléfono con tono por frase
+  - `voces.js` frases del personaje (¡Ora, zombie!, ¡Chocamos!, ¡Kiara, ven!, huesito, caída, ¡Moshi moshi!): grabación del jugador, voz incluida o voz del teléfono con tono por frase
+- `app/src/main/assets/voces/` — voces incluidas del personaje (zombie, choque, vacio, moshi)
   - `personajes.js` modelos por default y fotos reales por pose (jugador y Kiara)
   - `nivel1-plataformas.js` nivel 1 y motor de plataformas: bloques, enemigos, gorro con hélice, festejo en la meta, cámara vertical
   - `mecanicas-pixel.js` nadar, viento, plataformas que se mueven o se caen, barras de fuego, puertas y lava que sube

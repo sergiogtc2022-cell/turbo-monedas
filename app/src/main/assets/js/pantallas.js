@@ -35,7 +35,7 @@ function cfgHTML(){
   <div class="opt"><b>Voces del personaje<span>Activa o silencia todas las frases</span></b>
     <button class="pill ${cfg.voice?'':'off'}" data-a="voice">${cfg.voice?'Sí':'No'}</button></div>
   <p class="sub" style="margin:10px 0 0">Frases (graba la tuya o usa la voz del teléfono)</p>
-  ${Object.entries(FRASES).map(([id,f])=>`<div class="opt shop"><b>${f.nombre}<span>"${f.muestra}" · ${Voces.tiene(id)?'tu grabación':'voz del teléfono'}</span></b>
+  ${Object.entries(FRASES).map(([id,f])=>`<div class="opt shop"><b>${f.nombre}<span>"${f.muestra}" · ${Voces.origen(id)}</span></b>
     <span><label class="mini" for="voz_${id}">🎙<input type="file" accept="audio/*" id="voz_${id}" data-voz="${id}"></label><button class="mini" data-a="vp-${id}">▶</button>${Voces.tiene(id)?`<button class="mini off" data-a="vq-${id}">🗑</button>`:''}</span></div>`).join('')}
   <div class="msg" id="vmsg"></div>
   ${window.AndroidApp?`<div class="opt" style="margin-top:6px"><b>Versión instalada<span>${AndroidApp.version()}</span></b></div>

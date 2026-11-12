@@ -1,13 +1,13 @@
-// Merudichis Capuchinis · frases del personaje: grabadas por el jugador o, si no hay grabación,
-// dichas por la voz del teléfono con el tono y la velocidad de cada frase.
+// Merudichis Capuchinis · frases del personaje. Orden de preferencia: la grabación que cargó el jugador,
+// la voz incluida en el juego (carpeta voces/) y, si no hay ninguna, la voz del teléfono con su tono y velocidad.
 'use strict';
 const FRASES={
-  zombie: {nombre:'Un enemigo te choca', muestra:'¡Ora, zombie!',          texto:'¡Ora, zombi!',              tono:1.25,vel:1.1},
-  choque: {nombre:'Chocas con un muro',  muestra:'¡Chocamos!',             texto:'¡Chocamos!',                tono:1.1, vel:1.2},
+  zombie: {nombre:'Un enemigo te choca', muestra:'¡Ora, zombie!',          texto:'¡Ora, zombi!',              tono:1.25,vel:1.1,archivo:'voces/zombie.mp3'},
+  choque: {nombre:'Chocas con un muro',  muestra:'¡Chocamos!',             texto:'¡Chocamos!',                tono:1.1, vel:1.2,archivo:'voces/choque.mp3'},
   kiara:  {nombre:'Llamas a Kiara',      muestra:'¡Kiara, ven!',           texto:'¡Kiara, ven!',              tono:1.2, vel:1.0},
   huesito:{nombre:'Sale un hueso',       muestra:'Un huesito para Kiara',  texto:'Un huesito para Kiara',     tono:1.7, vel:0.8},
-  vacio:  {nombre:'Caes al vacío',       muestra:'¡Ora, zooooobieeee!',    texto:'¡Ora, zooooombiiiieeeee!',  tono:0.8, vel:0.55},
-  moshi:  {nombre:'Te quedas quieto',    muestra:'¡Moshi moshi!',          texto:'¡Moshi moshi!',             tono:1.4, vel:1.0}
+  vacio:  {nombre:'Caes al vacío',       muestra:'¡Ora, zooooobieeee!',    texto:'¡Ora, zooooombiiiieeeee!',  tono:0.8, vel:0.55,archivo:'voces/vacio.mp3'},
+  moshi:  {nombre:'Te quedas quieto',    muestra:'¡Moshi moshi!',          texto:'¡Moshi moshi!',             tono:1.4, vel:1.0,archivo:'voces/moshi.mp3'}
 };
 const Voces=(()=>{
   const datos={},bufs={};
@@ -30,6 +30,13 @@ const Voces=(()=>{
       bufs[id]=await ac.decodeAudioData(arr.buffer);return true;
     }catch(_){delete bufs[id];return false;}
   }
+  // voz incluida en el juego (archivo de audio junto al juego)
+  const incluidas={};
+  function tocarIncluida(id){
+    const f=FRASES[id];if(!f||!f.archivo)return false;
+    try{const a=incluidas[id]||(incluidas[id]=new Audio(f.archivo));a.currentTime=0;a.volume=cfg.volumen!=null?Math.min(1,cfg.volumen*1.4+0.2):1;
+      const p=a.play();if(p&&p.catch)p.catch(()=>{});return true;}catch(_){return false;}
+  }
   const prepararTodas=()=>{for(const id in datos)if(!bufs[id])decodificar(id);};
   function vozTelefono(texto,tono,vel){
     if(window.AndroidVoz){
@@ -45,6 +52,8 @@ const Voces=(()=>{
     if(bufs[id]&&ac){
       try{const src=ac.createBufferSource(),g=ac.createGain();g.gain.value=1.2;src.buffer=bufs[id];src.connect(g).connect(ac.destination);src.start();return;}catch(_){}
     }
+    if(datos[id])return;                 // grabación aún sin decodificar: mejor callar que mezclar voces
+    if(tocarIncluida(id))return;
     const f=FRASES[id];if(f)vozTelefono(f.texto,f.tono,f.vel);
   }
   async function grabar(id,dataUrl){
@@ -55,5 +64,6 @@ const Voces=(()=>{
   }
   function quitar(id){delete datos[id];delete bufs[id];try{localStorage.removeItem(clave(id));}catch(_){}}
   const tiene=id=>!!datos[id];
-  return {decir,grabar,quitar,tiene,prepararTodas,despertar};
+  const origen=id=>datos[id]?'tu grabación':FRASES[id]&&FRASES[id].archivo?'voz incluida':'voz del teléfono';
+  return {decir,grabar,quitar,tiene,origen,prepararTodas,despertar};
 })();
