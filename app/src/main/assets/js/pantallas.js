@@ -75,6 +75,7 @@ function ayudaNivel(n){
     :`Lado ${cfg.swap?'derecho':'izquierdo'}: desliza el dedo para moverte. Lado ${cfg.swap?'izquierdo':'derecho'}: toca para saltar (mantén para más alto).`;
   return {
     1:`${ctlPlat} Golpea los bloques con el puño: los ladrillos se rompen, los ? dan monedas o el hueso de Kiara. Si golpeas muchas veces un bloque duro te mareas.`,
+    '1px':`${ctlPlat} Versión pixel art: si mantienes la dirección empiezas a correr y se llena el medidor P (abajo); con el medidor lleno corres y saltas más. Mantén el salto para llegar más alto.`,
     2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
     3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
     4:`${ctlPlat} Juegas con Kiara: busca 5 huesos. 👃 olfatea para ver hacia dónde están, quédate quieta encima para excavar y 🐶 ladra para paralizar zombies. Al final llévaselos a tu dueño.`,
@@ -82,15 +83,14 @@ function ayudaNivel(n){
     kiaraman:'Usa la cruz o desliza el dedo. Come todas las croquetas; el hueso grande asusta a los ratones y Kiara puede atraparlos.',
     trastes:'Mueve el dedo y el personaje lo sigue. Atrapa platos, tazas, vasos y ollas; no atrapes globos de agua ni zapatos. El hueso trae a Kiara.',
     saltarina:'Toca o arrastra el dedo hacia donde quieres que vaya Kiara (o inclina el celular si lo elegiste). Rebota hacia arriba lo más alto que puedas.',
-    patio:'Elige un ayudante arriba y toca el pasto para ponerlo. Kiara ladra a los zombies, la maceta los detiene y el plato da croquetas.',
     memorama:'Toca dos cartas para voltearlas y encuentra los pares. Sube fotos de tu familia en 📸 Fotos.'
   }[n];
 }
 function nivelesHTML(){
   let h='<h1>Niveles</h1>';
-  for(let n=1;n<=TOTAL_NIVELES;n++){
+  for(const n of ORDEN_NIVELES){
     const r=Progreso.record(n);
-    h+=`<div class="opt shop"><b>${n}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
+    h+=`<div class="opt shop"><b>${n==='1px'?'1':n}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
       <button class="pill" data-a="play${n}">▶ Jugar</button></div>`;
     if(n===2){
       const autoBtn=k=>`<button class="pill ${cfg.car===k?'':'off'}" data-a="car-${k}" style="${cfg.car===k?'background:'+(Progreso.equipo('pintura')||AUTOS[k].color)+';color:'+(k==='hatch'&&!Progreso.equipo('pintura')?'#222':'#fff'):''}">${AUTOS[k].nombre}</button>`;
@@ -117,10 +117,10 @@ function resultadoHTML(){
       <button class="btn" data-a="minijuegos">🎮 Otros minijuegos</button>
       <button class="btn" data-a="home">🏠 Menú principal</button>`;
   }
-  const r=resultadoNivel,n=r.nivel;
-  return `<h1>¡NIVEL ${n} COMPLETADO!</h1><p class="estrellas grandes">${textoEstrellas(r.estrellas)}</p>
+  const r=resultadoNivel,n=r.nivel,sig=siguienteNivel(n);
+  return `<h1>¡${NOMBRES_NIVEL[n].toUpperCase()} COMPLETADO!</h1><p class="estrellas grandes">${textoEstrellas(r.estrellas)}</p>
     <p class="stats">${r.lineas.join('<br>')}<br>⏱ ${fmtSeg(r.tiempo)} · +${r.monedas} 🪙 al banco${r.nuevo?'<br><b style="color:#ffd23f">¡Nuevo récord!</b>':''}</p>
-    ${n<TOTAL_NIVELES?`<button class="btn go" data-a="play${n+1}">▶ Siguiente: ${NOMBRES_NIVEL[n+1]}</button>`:'<p class="stats">🏆 ¡Terminaste todo el juego!</p>'}
+    ${sig?`<button class="btn go" data-a="play${sig}">▶ Siguiente: ${NOMBRES_NIVEL[sig]}</button>`:'<p class="stats">🏆 ¡Terminaste todo el juego!</p>'}
     <button class="btn" data-a="play${n}">⟲ Repetir nivel</button>
     <button class="btn" data-a="share-${n}">📤 Compartir récord</button><div id="sharebox"></div>
     <button class="btn" data-a="home">🏠 Menú principal</button>`;
@@ -172,7 +172,7 @@ overlay.addEventListener('click',e=>{
   if(a.startsWith('vol-')){cfg.volante=a.slice(4);saveCfg();showOverlay();return;}
   if(a==='inclinv'){cfg.inclInv=!cfg.inclInv;saveCfg();showOverlay();return;}
   if(a.startsWith('buy-')||a.startsWith('eq-')){const m=accionTienda(a);showOverlay();const t=document.getElementById('tmsg');if(t)t.textContent=m;return;}
-  if(a.startsWith('share-')){const k=a.slice(6);compartirRecord(/^\d+$/.test(k)?+k:k);return;}
+  if(a.startsWith('share-')){const k=a.slice(6);compartirRecord(/^\d$/.test(k)?+k:k);return;}
   if(a==='copytxt'){const box=document.getElementById('sharebox');try{navigator.clipboard.writeText(box.dataset.texto).then(()=>{b.textContent='✔ Copiado';}).catch(()=>{});}catch(_){}return;}
   if(a.startsWith('qf-')){Personajes.quitar(a.slice(3));showOverlay();return;}
   if(a.startsWith('mode-')){cfg.mode=a.slice(5);saveCfg();showOverlay();return;}
@@ -185,7 +185,7 @@ overlay.addEventListener('click',e=>{
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}
   if(a==='home'){state='menu';view='';startLevel(1);Musica.tocar('menu');showOverlay();return;}
   goFullscreen();
-  if(/^play\d$/.test(a)){view='';startLevel(+a.slice(4));}
+  if(/^play(\d|1px)$/.test(a)){view='';const k=a.slice(4);startLevel(k==='1px'?k:+k);}
   else if(a.startsWith('mini-')){view='';startLevel(a.slice(5));}
   else if(a==='restart')startLevel(level);
   for(const k in input)input[k]=false;

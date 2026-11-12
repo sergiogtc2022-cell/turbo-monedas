@@ -3,26 +3,32 @@
 const MiniSaltarina=(()=>{
   let k=null, plats=[], monedas=[], zombis=[], camY=0, altura=0, objetivoX=0, siguienteY=0, avisoT=0, dedo=false;
 
-  function plataforma(y){
-    const alt=-y/10, r=Math.random();
-    const tipo=alt>150&&r<0.18?'fragil':alt>80&&r<0.36?'movil':r<0.08?'resorte':'normal';
-    const p={x:30+Math.random()*(W-130),y,w:72,tipo,vx:tipo==='movil'?(Math.random()<.5?-1:1)*(1+Math.min(2,alt/300)):0,rota:false};
+  // Cada piso nuevo tiene una plataforma principal que siempre se puede pisar y queda a un salto de la anterior;
+  // las frágiles son solo señuelos extra.
+  let ultimaX=0;
+  function agregar(x,y,tipo){
+    const alt=-y/10;
+    const p={x,y,w:72,tipo,vx:tipo==='movil'?(Math.random()<.5?-1:1)*(0.8+Math.min(1.6,alt/300)):0,rota:false};
     plats.push(p);
-    if(Math.random()<0.3)monedas.push({x:p.x+p.w/2,y:y-26});
-    if(alt>120&&tipo==='normal'&&Math.random()<0.12)zombis.push({x:p.x+p.w/2-13,y:y-24,w:26,h:24,p,vivo:true,dir:1});
+    if(tipo!=='fragil'&&Math.random()<0.3)monedas.push({x:p.x+p.w/2,y:y-26});
+    if(alt>120&&tipo==='normal'&&Math.random()<0.1)zombis.push({x:p.x+p.w/2-13,y:y-24,w:26,h:24,p,vivo:true,dir:1});
   }
   function init(){
     frames=0;coins=0;plats=[];monedas=[];zombis=[];camY=0;altura=0;avisoT=200;dedo=false;
     k={x:W/2,y:H-60,w:24,h:18,vx:0,vy:-11,face:1};
     objetivoX=W/2;
     plats.push({x:0,y:H-30,w:W,tipo:'normal',vx:0,piso:true});      // piso de inicio para no caer de entrada
-    siguienteY=H-110;
+    siguienteY=H-100;ultimaX=W/2;
     while(siguienteY>-H)generar();
   }
   function generar(){
-    plataforma(siguienteY);
-    const alt=-siguienteY/10;
-    siguienteY-=48+Math.random()*Math.min(55,22+alt/8);
+    const alt=-siguienteY/10, r=Math.random();
+    const tipo=alt>80&&r<0.3?'movil':r<0.08?'resorte':'normal';
+    let x=ultimaX-36+(Math.random()*2-1)*Math.min(W*0.35,200);
+    x=Math.max(8,Math.min(W-80,x));
+    agregar(x,siguienteY,tipo);ultimaX=x+36;
+    if(alt>150&&Math.random()<0.3)agregar(8+Math.random()*(W-88),siguienteY-24,'fragil');
+    siguienteY-=46+Math.random()*Math.min(40,14+alt/10);     // nunca más de ~86 px: el salto alcanza ~120
   }
   function toque(tipo,x){if(tipo==='up')dedo=false;else{dedo=true;objetivoX=x;}}
 

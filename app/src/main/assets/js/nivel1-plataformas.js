@@ -62,7 +62,8 @@ function solid(c,r){ if(c<0)return true; if(c>=COLS||r<0||r>=ROWS)return false; 
 
 function newPlayer(col){return {x:col*T+4,y:G*T-31,w:22,h:30,vx:0,vy:0,face:1,onGround:false,inv:0,boost:0,coyote:0,jumpBuf:0,jumping:false,anim:0,under:'',llama:0,golpeT:0};}
 let items=[], bumps={}, winT=0;
-let bloqueEspecial=null;   // el nivel 5 lo usa para que sus bloques suelten macetas
+let bloqueEspecial=null;
+let modoPixel=false;      // true en la versión pixel art del nivel 1 (física estilo clásico de 8/16 bits)   // el nivel 5 lo usa para que sus bloques suelten macetas
 function initGame(){bloqueEspecial=null;buildLevel();P=newPlayer(3);coins=0;lives=vidasIniciales();frames=0;checkpoint=3;cam=0;parts=[];items=[];bumps={};winT=0;kiara=null;kiaraMsg.t=0;}
 
 // ---------- Bloques ----------
@@ -144,9 +145,47 @@ function die(){
 function win(){
   const seg=frames/60;
   const estrellas=1+(coins>=totalCoins*0.5?1:0)+(seg<120?1:0);
-  terminarNivel(1,seg,coins,estrellas,[`🪙 ${coins} de ${totalCoins} monedas`,`❤ ${lives} vidas`]);
+  terminarNivel(modoPixel?'1px':1,seg,coins,estrellas,[`🪙 ${coins} de ${totalCoins} monedas`,`❤ ${lives} vidas`]);
 }
 
+function fisicaClasica(dir,montada){
+  const maxV=P.boost>0?9:(montada?6.5:4.6), acc=P.onGround?0.34:0.24;
+  if(dir){ if(Math.sign(P.vx)===-dir&&P.onGround)P.vx+=dir*acc*2.5; else P.vx+=dir*acc; P.face=dir; }
+  else if(P.onGround){P.vx*=0.8;if(Math.abs(P.vx)<0.1)P.vx=0;} else P.vx*=0.98;
+  if(Math.abs(P.vx)>maxV)P.vx=Math.sign(P.vx)*Math.max(maxV,Math.abs(P.vx)*0.97);
+  if(P.boost>0)P.boost--;
+  P.coyote=P.onGround?6:P.coyote-1;
+  if(P.jumpBuf>0){P.jumpBuf--;
+    if(P.coyote>0){P.vy=(montada?-11.8:-10.6)-Math.min(Math.abs(P.vx),9)*0.12;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
+  if(P.jumping&&!input.j&&P.vy<-4)P.vy=-4;
+  P.vy=Math.min(P.vy+0.6,12);
+}
+// Física estilo plataformas clásicas: caminar, correr (al mantener la dirección) y medidor P;
+// derrape al cambiar de lado y salto cuya altura depende de cuánto mantienes el botón.
+function fisicaP3(dir,montada){
+  const suelo=P.onGround;
+  if(dir&&dir===P.ultDir)P.holdT=(P.holdT||0)+1;else P.holdT=0;
+  P.ultDir=dir;
+  const corre=P.holdT>28;
+  const MAX_CAMINA=3.0,MAX_CORRE=4.6,MAX_P=6.0;
+  if(suelo){if(corre&&Math.abs(P.vx)>=MAX_CORRE-0.3)P.pm=Math.min(6,(P.pm||0)+0.1);else P.pm=Math.max(0,(P.pm||0)-0.05);}
+  let max=P.pm>=6?MAX_P:corre?MAX_CORRE:MAX_CAMINA;
+  if(montada)max=Math.max(max,5.4);
+  if(P.boost>0){max=8;P.boost--;}
+  P.derrape=0;
+  if(dir){
+    if(suelo&&Math.sign(P.vx)===-dir&&Math.abs(P.vx)>1){P.vx+=dir*0.32;P.derrape=1;}
+    else if(Math.abs(P.vx)<max||Math.sign(P.vx)!==dir)P.vx+=dir*(suelo?0.13:0.1)*(corre?1.3:1);
+    else if(suelo)P.vx-=Math.sign(P.vx)*0.1;
+    P.face=dir;
+  } else if(suelo){P.vx-=Math.sign(P.vx)*Math.min(Math.abs(P.vx),0.14);}
+  if(Math.abs(P.vx)>max+0.3&&!suelo)P.vx*=0.995;
+  P.coyote=suelo?6:P.coyote-1;
+  if(P.jumpBuf>0){P.jumpBuf--;
+    if(P.coyote>0){P.vy=(montada?-10:-8.6)-Math.abs(P.vx)*0.25;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
+  const g=P.vy<0?(P.resorte?0.55:(P.jumping&&input.j?0.36:1.0)):0.6;
+  P.vy=Math.min(P.vy+g,8.5);
+}
 function step(){
   frames++;
   if(winT>0){                          // festejo en la meta antes de mostrar resultados
@@ -159,19 +198,10 @@ function step(){
   let dir=cfg.mode==='auto'?1:(input.r?1:0)-(input.l?1:0);
   if(P.aturdido>0){P.aturdido--;dir=0;}
   const montada=kiaraMontada();
-  const maxV=P.boost>0?9:(montada?6.5:4.6), acc=P.onGround?0.34:0.24;
-  if(dir){ if(Math.sign(P.vx)===-dir&&P.onGround)P.vx+=dir*acc*2.5; else P.vx+=dir*acc; P.face=dir; }
-  else if(P.onGround){P.vx*=0.8;if(Math.abs(P.vx)<0.1)P.vx=0;} else P.vx*=0.98;
-  if(Math.abs(P.vx)>maxV)P.vx=Math.sign(P.vx)*Math.max(maxV,Math.abs(P.vx)*0.97);
-  if(P.boost>0)P.boost--;
-  P.coyote=P.onGround?6:P.coyote-1;
-  if(P.jumpBuf>0){P.jumpBuf--;
-    if(P.coyote>0){P.vy=(montada?-11.8:-10.6)-Math.min(Math.abs(P.vx),9)*0.12;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
-  if(P.jumping&&!input.j&&P.vy<-4)P.vy=-4;
-  P.vy=Math.min(P.vy+0.6,12);
+  if(modoPixel)fisicaP3(dir,montada);else fisicaClasica(dir,montada);
   moveX(P); moveY(P);
-  if(P.onGround){P.jumping=false;
-    if(P.under==='S'){P.vy=-15.5;P.onGround=false;P.coyote=0;springT=10;sfx.spring();}
+  if(P.onGround){P.jumping=false;P.resorte=false;
+    if(P.under==='S'){P.vy=-15.5;P.onGround=false;P.coyote=0;P.resorte=true;springT=10;sfx.spring();}
     else if(P.under==='>'){if(P.boost<60){sfx.boost();Musica.jingle('turbo');}P.boost=90;P.vx=Math.max(P.vx,8.5);P.face=1;}
   }
   P.anim+=Math.abs(P.vx)*0.07;
@@ -386,4 +416,4 @@ function drawHUD(){
 }
 
 
-const Nivel1={init:initGame,step,draw};
+const Nivel1={init(){initGame();modoPixel=false;},step,draw};

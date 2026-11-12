@@ -12,12 +12,13 @@ const MiniTrastes=(()=>{
     hueso:{valor:0,vel:1,color:'#fff8e1',hueso:true}
   };
   let ninaX=0, ninaDir=1, ninaPose='n_parada', poseT=0, tiro=0, cosas=[], rotos=[], jx=0, objetivoX=0,
-      puntos=0, corazones=3, lento=0, lodo=0, kiaraT=0, kx=0, atrapadas=0, avisoT=0, anim=0;
+      puntos=0, corazones=3, lento=0, lodo=0, kiaraT=0, kx=0, atrapadas=0, avisoT=0, anim=0, rafaga=0, rafT=0, msgT=0;
+  const dificultad=()=>1+Math.min(2.4,frames/3600*0.9+atrapadas/45);     // sube con el tiempo y con lo que atrapas
 
   const piso=()=>H-12, repisa=()=>H*0.2;
   function init(){
     frames=0;coins=0;puntos=0;corazones=3+(Progreso.tiene('vida_extra')?1:0);
-    ninaX=W/2;ninaDir=1;tiro=90;cosas=[];rotos=[];jx=W/2;objetivoX=W/2;lento=0;lodo=0;kiaraT=0;kx=-40;atrapadas=0;avisoT=200;
+    ninaX=W/2;ninaDir=1;tiro=90;rafaga=0;rafT=0;msgT=0;cosas=[];rotos=[];jx=W/2;objetivoX=W/2;lento=0;lodo=0;kiaraT=0;kx=-40;atrapadas=0;avisoT=200;
   }
   function toque(tipo,x){if(tipo!=='up')objetivoX=x;}
 
@@ -26,7 +27,7 @@ const MiniTrastes=(()=>{
     const r=Math.random();
     let t=r<0.32?'plato':r<0.55?'taza':r<0.7?'vaso':r<0.78?'olla':r<0.88?'globo':r<0.96?'zapato':'hueso';
     if(t==='hueso'&&kiaraT>0)t='plato';
-    const dif=1+Math.min(1.6,n/30);
+    const dif=dificultad();
     cosas.push({t,x:ninaX,y:repisa()+10,vx:(Math.random()-0.5)*2.2,vy:-2,rot:0,g:0.12*TIPOS[t].vel*dif});
     ninaPose='n_lanza';poseT=18;beep(400,600,.06,'triangle',.04);
   }
@@ -34,11 +35,18 @@ const MiniTrastes=(()=>{
     frames++;anim++;
     if(avisoT>0)avisoT--;
     // la niña camina por la repisa y avienta trastes cada vez más rápido
-    ninaX+=ninaDir*(1.2+Math.min(2,atrapadas/25));
+    ninaX+=ninaDir*(1.2*dificultad());
     if(ninaX<50||ninaX>W-50){ninaDir*=-1;ninaX=Math.max(50,Math.min(W-50,ninaX));}
     if(Math.random()<0.006)ninaDir*=-1;
     if(poseT>0&&--poseT===0)ninaPose='n_parada';
-    if(--tiro<=0){lanzar();tiro=Math.max(26,75-atrapadas*1.4)+Math.random()*25;}
+    // de vez en cuando avienta una ráfaga de trastes seguidos
+    if(++rafT>Math.max(420,900-frames/6)&&!rafaga){rafaga=3+Math.min(4,Math.floor(frames/1800));rafT=0;msgT=70;Musica.jingle('turbo');}
+    if(msgT>0)msgT--;
+    if(--tiro<=0){
+      lanzar();
+      if(rafaga>0){rafaga--;tiro=12;}
+      else tiro=Math.max(20,75-frames/80-atrapadas)+Math.random()*25;
+    }
     // jugador: sigue al dedo; con el teclado o los botones se mueve paso a paso
     if(input.l)objetivoX-=7;if(input.r)objetivoX+=7;
     objetivoX=Math.max(30,Math.min(W-30,objetivoX));
@@ -116,6 +124,7 @@ const MiniTrastes=(()=>{
     cx.textBaseline='middle';cx.textAlign='left';cx.font='bold 18px system-ui,Arial';
     txt('🍽 '+puntos,12,repisa()+22);txt('❤'.repeat(Math.max(0,corazones)),100,repisa()+22);txt('Mejor: '+Progreso.puntaje('trastes'),200,repisa()+22);
     if(kiaraT>0){cx.fillStyle='#ffb74d';cx.fillRect(330,repisa()+16,110*kiaraT/kiaraDura(),10);}
+    if(msgT>0){cx.textAlign='center';cx.font='bold 30px system-ui,Arial';txt('¡RÁFAGA!',W/2,H*0.42);cx.textAlign='left';}
     if(avisoT>0){cx.textAlign='center';cx.font='bold 20px system-ui,Arial';cx.globalAlpha=Math.min(1,avisoT/30);
       txt('Mueve el dedo para atrapar los trastes · no atrapes globos ni zapatos',W/2,H*0.5);cx.globalAlpha=1;cx.textAlign='left';}
   }

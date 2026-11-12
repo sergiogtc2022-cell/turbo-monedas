@@ -1,6 +1,7 @@
 // Merudichis Capuchinis · base compartida: pantalla, configuración, voz, sonido, entrada y dibujos comunes
 'use strict';
-const cv=document.getElementById('c'), cx=cv.getContext('2d');
+const cv=document.getElementById('c');
+let cx=cv.getContext('2d');   // el nivel pixel art lo cambia un momento para dibujar en baja resolución
 const overlay=document.getElementById('overlay'), card=document.getElementById('card'), pauseBtn=document.getElementById('pause');
 const T=32, ROWS=13, G=11;
 let W,H,dpr,scale;
@@ -86,7 +87,19 @@ function bind(id,k){const el=document.getElementById(id);
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>{el.classList.remove('on');setKey(k,false)}));
 }
 bind('bL','l');bind('bR','r');bind('bJ','j');bind('bOlfa','a1');bind('bLadra','a2');
-bind('pU','pu');bind('pD','pd');bind('pL','pl');bind('pR','pr');
+(()=>{
+  const pad=document.getElementById('dpad');
+  const marca=()=>{for(const [id,k] of [['pU','pu'],['pD','pd'],['pL','pl'],['pR','pr']])document.getElementById(id).classList.toggle('on',input[k]);};
+  const leer=e=>{
+    const r=pad.getBoundingClientRect(),dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+    input.pu=input.pd=input.pl=input.pr=false;
+    if(Math.hypot(dx,dy)>=14){if(Math.abs(dx)>Math.abs(dy))input[dx>0?'pr':'pl']=true;else input[dy>0?'pd':'pu']=true;}
+    marca();
+  };
+  pad.addEventListener('pointerdown',e=>{e.preventDefault();try{pad.setPointerCapture(e.pointerId)}catch(_){}leer(e);});
+  pad.addEventListener('pointermove',e=>{if(e.buttons||e.pointerType==='touch')leer(e);});
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>pad.addEventListener(ev,()=>{input.pu=input.pd=input.pl=input.pr=false;marca();}));
+})();
 document.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Control táctil
@@ -115,7 +128,7 @@ cv.addEventListener('pointerdown',e=>{
   let role='jump';
   if(level===2)role='volante';
   else if(level===3)role='swipe';
-  else if(cfg.mode==='touch'||level!==1){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
+  else if(cfg.mode==='touch'||(level!==1&&level!=='1px')){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
   touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,sx:e.clientX,cx:e.clientX,dx:0,swipe:false,usado:false});
   updTouchInput();
 });

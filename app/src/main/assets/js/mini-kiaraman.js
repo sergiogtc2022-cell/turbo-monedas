@@ -30,7 +30,7 @@ const MiniKiaraman=(()=>{
   };
   function nuevo(x,y,vel){return {x,y,dir:D.l,prog:0,vel,face:-1,anim:0};}
   function colocar(){
-    kiaraP=nuevo(9,11,0.11);quiere=null;
+    kiaraP=nuevo(9,11,0.12);quiere=null;
     ratones=RATONES.map((r,i)=>Object.assign(nuevo(i===0?9:8+(i%3),i===0?5:7,0.085),{color:r.color,modo:r.nombre,i,
       salida:i*150,comido:false}));
     pausa=60;
@@ -98,6 +98,12 @@ const MiniKiaraman=(()=>{
     const k=kiaraP;
     if(quiere&&quiere.x===-k.dir.x&&quiere.y===-k.dir.y&&k.prog>0){   // darse la vuelta en cualquier momento
       k.x=(k.x+k.dir.x+C)%C;k.y+=k.dir.y;k.dir=quiere;k.prog=1-k.prog;if(k.dir.x)k.face=k.dir.x;
+    }
+    if(quiere&&k.prog>0&&(quiere.x!==k.dir.x||quiere.y!==k.dir.y)&&!(quiere.x===-k.dir.x&&quiere.y===-k.dir.y)){
+      if(k.prog<0.4&&!pared(k.x+quiere.x,k.y+quiere.y,false)){k.prog=0;k.dir=quiere;}
+      else if(k.prog>=0.6){const nx=(k.x+k.dir.x+C)%C,ny=k.y+k.dir.y;
+        if(!pared(nx+quiere.x,ny+quiere.y,false)){k.x=nx;k.y=ny;k.prog=0;k.dir=quiere;}}
+      if(k.dir.x)k.face=k.dir.x;
     }
     if(k.prog===0)elegirKiara(k);
     if(avanzar(k,k.vel,elegirKiara,false))k.anim+=0.25;
