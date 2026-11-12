@@ -1,6 +1,6 @@
 // Merudichis Capuchinis · poder de Kiara: llega por 10 segundos y, al azar, ataca, ladra y paraliza, o se hace grande para montarla
 'use strict';
-const KIARA_DURA=600;                 // 10 segundos a 60 cuadros por segundo
+const kiaraDura=()=>Progreso.tiene('kiara_12')?720:600;   // 10 s (12 s con la ventaja de la tienda) a 60 cuadros por segundo
 const KIARA_ALTO=24, KIARA_GRANDE=44; // altura en pixeles del mundo
 let kiara=null, kiaraMsg={texto:'',t:0};
 
@@ -11,7 +11,7 @@ function activarKiara(){
   P.llama=45;
   sfx.silbido();
   hablar('¡Ven, Kiara!');
-  kiara={modo,t:KIARA_DURA,x:Math.max(2,cam-40),y:Math.max(0,P.y-60),w:grande?34:24,h:grande?26:18,vx:0,vy:0,
+  kiara={modo,t:kiaraDura(),x:Math.max(2,cam-40),y:Math.max(0,P.y-60),w:grande?34:24,h:grande?26:18,vx:0,vy:0,
     face:1,anim:0,ladra:0,montada:false,saliendo:false,onGround:false};
   kiaraMsg={texto:modo==='ataca'?'¡Kiara al ataque!':modo==='ladra'?'¡Kiara ladra y paraliza!':'¡Kiara gigante! Súbete',t:150};
 }
@@ -119,7 +119,7 @@ function hudKiara(L){
   if(kiara&&!kiara.saliendo){
     const w=120,x=W/2-w/2,y=16;
     cx.fillStyle='rgba(0,0,0,.35)';cx.fillRect(x,y,w,10);
-    cx.fillStyle='#ffb74d';cx.fillRect(x,y,w*kiara.t/KIARA_DURA,10);
+    cx.fillStyle='#ffb74d';cx.fillRect(x,y,w*kiara.t/kiaraDura(),10);
     cx.font='bold 14px system-ui,Arial';cx.textAlign='center';txt('Kiara',W/2-18,y+24);cx.textAlign='left';
   }
   if(kiaraMsg.t>0){

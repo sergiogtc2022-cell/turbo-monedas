@@ -55,38 +55,64 @@ function pintarMiniaturas(){
     else Personajes.heroe(g,id,c.width/2,c.height-10,1,140);
   }
 }
+// Ayuda de controles para cada nivel
+function ayudaNivel(n){
+  const ctlPlat=cfg.mode==='buttons'?'◀ ▶ moverse · ⤒ saltar (mantén para más alto).'
+    :cfg.mode==='auto'&&n===1?'El personaje corre solo. Toca en cualquier parte para saltar.'
+    :`Lado ${cfg.swap?'derecho':'izquierdo'}: desliza el dedo para moverte. Lado ${cfg.swap?'izquierdo':'derecho'}: toca para saltar (mantén para más alto).`;
+  return {
+    1:`${ctlPlat} Golpea los bloques con el puño: los ladrillos se rompen, los ? dan monedas o el hueso de Kiara. Si golpeas muchas veces un bloque duro te mareas.`,
+    2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
+    3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
+    4:`${ctlPlat} Juegas con Kiara: busca 5 huesos. 👃 olfatea para ver hacia dónde están, quédate quieta encima para excavar y 🐶 ladra para paralizar zombies. Al final llévaselos a tu dueño.`,
+    5:`${ctlPlat} Golpea con el puño los bloques de maceta cuando el Zombie Gigante pase debajo. Esquiva sus zapatos. Tres golpes y Kiara da la mordida final.`
+  }[n];
+}
+function nivelesHTML(){
+  let h='<h1>Niveles</h1>';
+  for(let n=1;n<=TOTAL_NIVELES;n++){
+    const r=Progreso.record(n);
+    h+=`<div class="opt shop"><b>${n}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
+      <button class="pill" data-a="play${n}">▶ Jugar</button></div>`;
+    if(n===2){
+      const autoBtn=k=>`<button class="pill ${cfg.car===k?'':'off'}" data-a="car-${k}" style="${cfg.car===k?'background:'+(Progreso.equipo('pintura')||AUTOS[k].color)+';color:'+(k==='hatch'&&!Progreso.equipo('pintura')?'#222':'#fff'):''}">${AUTOS[k].nombre}</button>`;
+      h+=`<div class="modes">${autoBtn('sedan')}${autoBtn('compacto')}${autoBtn('hatch')}</div>`;
+    }
+  }
+  return h+'<button class="btn go" data-a="back">✔ Listo</button>';
+}
+function resultadoHTML(){
+  const r=resultadoNivel,n=r.nivel;
+  return `<h1>¡NIVEL ${n} COMPLETADO!</h1><p class="estrellas grandes">${textoEstrellas(r.estrellas)}</p>
+    <p class="stats">${r.lineas.join('<br>')}<br>⏱ ${fmtSeg(r.tiempo)} · +${r.monedas} 🪙 al banco${r.nuevo?'<br><b style="color:#ffd23f">¡Nuevo récord!</b>':''}</p>
+    ${n<TOTAL_NIVELES?`<button class="btn go" data-a="play${n+1}">▶ Siguiente: ${NOMBRES_NIVEL[n+1]}</button>`:'<p class="stats">🏆 ¡Terminaste todo el juego!</p>'}
+    <button class="btn" data-a="play${n}">⟲ Repetir nivel</button>
+    <button class="btn" data-a="share-${n}">📤 Compartir récord</button><div id="sharebox"></div>
+    <button class="btn" data-a="home">🏠 Menú principal</button>`;
+}
 function showOverlay(){
   clearTouches();
   pauseBtn.style.display='none';overlay.style.display='flex';
   if(view==='cfg'){card.innerHTML=cfgHTML();return;}
   if(view==='fotos'){card.innerHTML=fotosHTML();pintarMiniaturas();return;}
-  const cfgBtn=`<button class="btn" data-a="fotos">📸 Fotos de personajes</button><button class="btn" data-a="cfg">⚙ Configuración</button>`;
+  if(view==='niveles'){card.innerHTML=nivelesHTML();return;}
+  if(view==='tienda'){card.innerHTML=tiendaHTML();pintarTienda();return;}
+  if(view==='records'){card.innerHTML=recordsHTML();return;}
+  const extras=`<button class="btn" data-a="fotos">📸 Fotos de personajes</button><button class="btn" data-a="cfg">⚙ Configuración</button>`;
   const photo=`<div class="face"><canvas id="prev" width="96" height="96" style="width:96px;height:96px"></canvas></div>
-    <label class="btn" for="file">📷 Tomar o elegir foto<input type="file" accept="image/*" id="file"></label>
+    <label class="btn" for="file">📷 Foto de tu cara<input type="file" accept="image/*" id="file"></label>
     <div class="msg" id="msg"></div>`;
-  const autoBtn=k=>`<button class="pill ${cfg.car===k?'':'off'}" data-a="car-${k}" style="${cfg.car===k?'background:'+AUTOS[k].color+';color:'+(k==='hatch'?'#222':'#fff'):''}">${AUTOS[k].nombre}</button>`;
-  const autos=`<p class="sub" style="margin:10px 0 0">Tu auto para el Gran Premio</p><div class="modes">${autoBtn('sedan')}${autoBtn('compacto')}${autoBtn('hatch')}</div>`;
-  const ctl1=cfg.mode==='touch'
-    ?`Lado ${cfg.swap?'derecho':'izquierdo'}: pon el dedo y deslízalo para moverte. Lado ${cfg.swap?'izquierdo':'derecho'}: toca para saltar (mantén para más alto).`
-    :cfg.mode==='auto'?'El personaje corre solo. Toca en cualquier parte para saltar (mantén para más alto).'
-    :'◀ ▶ moverse · ⤒ saltar (mantén para saltar más alto).';
-  const ctl2=cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.'
-    :'Mantén el dedo del lado izquierdo para girar a la izquierda y del derecho para girar a la derecha. Desliza hacia arriba para brincar.';
-  const hint1=`<b>Nivel 1:</b> ${ctl1} Salta y golpea los bloques con el puño: los ladrillos se rompen y los bloques ? dan monedas o el hueso de Kiara. Kiara te ayuda 10 segundos: ataca, ladra y paraliza, o se hace grande para que la montes. Si te golpean pierdes tus monedas; sin monedas pierdes una vida.`;
-  const hint2=`<b>Nivel 2:</b> El auto acelera solo. ${ctl2} Las monedas suben tu velocidad máxima, las franjas amarillas son turbo y los charcos negros te hacen derrapar. Son 3 vueltas.`;
   const hint=t=>`<p class="hint">Gira el celular en horizontal.<br>${t}</p>`;
-  if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · 2 niveles</p>${photo}
-    <button class="btn go" data-a="play1">▶ Nivel 1 · Plataformas</button>
-    <button class="btn go" data-a="play2">🏁 Nivel 2 · Gran Premio</button>${autos}${cfgBtn}${hint(hint1+'<br>'+hint2)}`;
-  else if(state==='pause') card.innerHTML=`<h1>Pausa</h1>${photo}<button class="btn go" data-a="resume">▶ Continuar</button>
-    <button class="btn" data-a="restart">⟲ Reiniciar nivel</button><button class="btn" data-a="home">🏠 Menú principal</button>${cfgBtn}${hint(level===2?hint2:hint1)}`;
-  else if(state==='win'&&level===1) card.innerHTML=`<h1>¡NIVEL COMPLETADO!</h1><p class="stats">🪙 ${coins} / ${totalCoins} monedas<br>⏱ ${fmtTime()} · ❤ ${lives} vidas</p>
-    <button class="btn go" data-a="play2">🏁 Siguiente: Gran Premio</button>${autos}<button class="btn" data-a="play1">⟲ Repetir nivel 1</button>`;
-  else if(state==='win'&&level===2){const r=Nivel2.result();
-    const medal=r.place===1?'🥇':r.place===2?'🥈':r.place===3?'🥉':'🏁';
-    card.innerHTML=`<h1>${medal} ¡LLEGASTE ${r.place}° DE ${r.total}!</h1><p class="stats">${r.auto}<br>⏱ ${r.time} · 🪙 ${r.coins} monedas</p>
-    <button class="btn go" data-a="play2">⟲ Correr otra vez</button>${autos}<button class="btn" data-a="home">🏠 Menú principal</button>`;}
-  else if(state==='over') card.innerHTML=`<h1>FIN DEL JUEGO</h1><p class="stats">Te quedaste sin vidas.</p>${photo}<button class="btn go" data-a="play1">▶ Intentar de nuevo</button><button class="btn" data-a="home">🏠 Menú principal</button>`;
+  if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · ${TOTAL_NIVELES} niveles · 🪙 ${Progreso.banco}</p>${photo}
+    <button class="btn go" data-a="niveles">▶ Jugar</button>
+    <button class="btn" data-a="tienda">🛒 Tienda</button>
+    <button class="btn" data-a="records">🏆 Récords</button>${extras}`;
+  else if(state==='pause') card.innerHTML=`<h1>Pausa</h1><p class="sub">Nivel ${level} · ${NOMBRES_NIVEL[level]}</p>
+    <button class="btn go" data-a="resume">▶ Continuar</button>
+    <button class="btn" data-a="restart">⟲ Reiniciar nivel</button><button class="btn" data-a="home">🏠 Menú principal</button>${extras}${hint(ayudaNivel(level))}`;
+  else if(state==='win') card.innerHTML=resultadoHTML();
+  else if(state==='over') card.innerHTML=`<h1>FIN DEL JUEGO</h1><p class="stats">Te quedaste sin vidas en ${NOMBRES_NIVEL[level]}.</p>
+    <button class="btn go" data-a="play${level}">▶ Intentar de nuevo</button><button class="btn" data-a="home">🏠 Menú principal</button>`;
   drawPreview();
 }
 function pauseGame(){state='pause';showOverlay();}
@@ -100,7 +126,10 @@ overlay.addEventListener('click',e=>{
   const a=b.dataset.a;
   startAudio();
   if(a==='cfg'){view='cfg';showOverlay();return;}
-  if(a==='fotos'){view='fotos';showOverlay();return;}
+  if(a==='fotos'||a==='niveles'||a==='tienda'||a==='records'){view=a;showOverlay();return;}
+  if(a.startsWith('buy-')||a.startsWith('eq-')){const m=accionTienda(a);showOverlay();const t=document.getElementById('tmsg');if(t)t.textContent=m;return;}
+  if(a.startsWith('share-')){compartirRecord(+a.slice(6));return;}
+  if(a==='copytxt'){const box=document.getElementById('sharebox');try{navigator.clipboard.writeText(box.dataset.texto).then(()=>{b.textContent='✔ Copiado';}).catch(()=>{});}catch(_){}return;}
   if(a.startsWith('qf-')){Personajes.quitar(a.slice(3));showOverlay();return;}
   if(a.startsWith('mode-')){cfg.mode=a.slice(5);saveCfg();showOverlay();return;}
   if(a==='swap'){cfg.swap=!cfg.swap;saveCfg();showOverlay();return;}
@@ -110,10 +139,9 @@ overlay.addEventListener('click',e=>{
   if(a==='delvoice'){voiceData=null;voiceBuf=null;try{localStorage.removeItem('tm_voice')}catch(_){}showOverlay();return;}
   if(a==='back'){view='';showOverlay();return;}
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}
-  if(a==='home'){state='menu';startLevel(1);showOverlay();return;}
+  if(a==='home'){state='menu';view='';startLevel(1);showOverlay();return;}
   goFullscreen();
-  if(a==='play1')startLevel(1);
-  else if(a==='play2')startLevel(2);
+  if(/^play\d$/.test(a)){view='';startLevel(+a.slice(4));}
   else if(a==='restart')startLevel(level);
   for(const k in input)input[k]=false;
   state='play';overlay.style.display='none';pauseBtn.style.display='block';

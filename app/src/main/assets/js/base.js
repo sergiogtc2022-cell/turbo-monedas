@@ -71,20 +71,21 @@ const sfx={
   tock:()=>beep(140,90,.08,'square',.06),
   item:()=>[392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,0,.1,'triangle',.08),i*70)),
   ladrido:()=>{beep(620,300,.09,'square',.07);setTimeout(()=>beep(560,280,.1,'square',.07),130)},
+  aturdido:()=>[880,660,880,660].forEach((f,i)=>setTimeout(()=>beep(f,0,.08,'triangle',.06),i*90)),
   silbido:()=>{beep(1300,1900,.18,'sine',.08);setTimeout(()=>beep(1900,1400,.22,'sine',.08),190)}
 };
 
 // ---------- Entrada ----------
-const input={l:false,r:false,j:false,jp:false};
+const input={l:false,r:false,j:false,jp:false,d:false,swipe:null,a1:false,a2:false};
 function setKey(k,v){if(k==='j'&&v&&!input.j)input.jp=true;input[k]=v;}
-const keyMap={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',Space:'j',ArrowUp:'j',KeyW:'j',KeyZ:'j'};
+const keyMap={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',Space:'j',ArrowUp:'j',KeyW:'j',KeyZ:'j',ArrowDown:'d',KeyS:'d',KeyX:'a1',KeyC:'a2'};
 addEventListener('keydown',e=>{const k=keyMap[e.code];if(k){e.preventDefault();if(!e.repeat)setKey(k,true)} if(e.code==='Escape'&&state==='play')pauseGame();});
 addEventListener('keyup',e=>{const k=keyMap[e.code];if(k)setKey(k,false)});
 function bind(id,k){const el=document.getElementById(id);
   el.addEventListener('pointerdown',e=>{e.preventDefault();try{el.setPointerCapture(e.pointerId)}catch(_){}el.classList.add('on');setKey(k,true)});
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>{el.classList.remove('on');setKey(k,false)}));
 }
-bind('bL','l');bind('bR','r');bind('bJ','j');
+bind('bL','l');bind('bR','r');bind('bJ','j');bind('bOlfa','a1');bind('bLadra','a2');
 document.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Control táctil
@@ -97,6 +98,7 @@ function updTouchInput(){
     if(t.role==='move'){if(t.dx>14)r=true;else if(t.dx<-14)l=true;if(t.swipe)j=true;}
     else if(t.role==='kl'){l=true;if(t.swipe)j=true;}
     else if(t.role==='kr'){r=true;if(t.swipe)j=true;}
+    else if(t.role==='swipe'){}
     else j=true;
   }
   input.l=l;input.r=r;if(j&&!input.j)input.jp=true;input.j=j;
@@ -106,21 +108,27 @@ cv.addEventListener('pointerdown',e=>{
   e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}
   let role='jump';
   if(level===2)role=e.clientX<W*0.5?'kl':'kr';
-  else if(cfg.mode==='touch'){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
-  touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,dx:0,swipe:false});
+  else if(level===3)role='swipe';
+  else if(cfg.mode==='touch'||level>=4){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
+  touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,sx:e.clientX,dx:0,swipe:false,usado:false});
   updTouchInput();
 });
 cv.addEventListener('pointermove',e=>{
   const t=touches.get(e.pointerId);if(!t)return;
   t.dx=e.clientX-t.x0;
   if(t.dx>70){t.x0=e.clientX-70;t.dx=70;} if(t.dx<-70){t.x0=e.clientX+70;t.dx=-70;}
+  if(t.role==='swipe'){                                  // nivel 3: un deslizamiento = un giro
+    const dx=e.clientX-t.sx,dy=e.clientY-t.y0;
+    if(!t.usado&&Math.hypot(dx,dy)>28){t.usado=true;input.swipe=Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u');}
+    return;
+  }
   if(t.role!=='jump'&&t.y0-e.clientY>45)t.swipe=true;   // deslizar hacia arriba también salta
   updTouchInput();
 });
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>cv.addEventListener(ev,e=>{
   if(touches.delete(e.pointerId))updTouchInput();
 }));
-function clearTouches(){touches.clear();for(const k in input)input[k]=false;}
+function clearTouches(){touches.clear();for(const k in input)input[k]=k==='swipe'?null:false;}
 
 // ---------- Dibujo ----------
 function drawDefaultFace(ctx,x,y,r,face){

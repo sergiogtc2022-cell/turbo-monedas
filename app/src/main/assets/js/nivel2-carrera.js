@@ -95,7 +95,8 @@ const Nivel2=(()=>{
   const wd=d=>{d=wrapZ(d);return d>trackLen/2?d-trackLen:d;};
 
   function init(){
-    yo=AUTOS[cfg.car]||AUTOS.sedan;
+    yo=Object.assign({},AUTOS[cfg.car]||AUTOS.sedan);
+    if(Progreso.equipo('pintura'))yo.color=Progreso.equipo('pintura');
     build();
     pdist=0;speed=0;px=0;skyOff=0;count=0;raceF=0;hopT=0;spinT=0;boostT=0;steer=0;
     coins=0;frames=0;bubble=0;lastLap=1;place=6;
@@ -198,7 +199,11 @@ const Nivel2=(()=>{
       if(lap<=LAPS){sfx.check();for(const sg of segs)for(const o of sg.sprites)o.got=false;}
     }
     place=1+autos.filter(k=>k.dist>pdist+PLAYER_Z).length;
-    if(pdist>=LAPS*trackLen){finalPlace=place;state='win';sfx.win();showOverlay();}
+    if(pdist>=LAPS*trackLen){
+      finalPlace=place;sfx.win();
+      const medalla=place===1?'🥇':place===2?'🥈':place===3?'🥉':'🏁';
+      terminarNivel(2,raceF/60,coins,place===1?3:place<=3?2:1,[`${medalla} Llegaste ${place}° de ${autos.length+1}`,yo.nombre]);
+    }
   }
 
   // ---------- Dibujo ----------

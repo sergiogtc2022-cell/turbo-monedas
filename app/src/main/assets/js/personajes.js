@@ -43,6 +43,7 @@ const Personajes=(()=>{
   };
   const ALTO_HEROE=70, ALTO_KIARA=38;   // altura de los modelos en sus propias unidades
   const cache={};
+  const eq=k=>typeof Progreso!=='undefined'&&Progreso.equipo(k);   // accesorios comprados en la tienda
   const path=d=>cache[d]||(cache[d]=new Path2D(d));
 
   function linea(ctx,d,color,ancho){
@@ -67,6 +68,8 @@ const Personajes=(()=>{
       if(m.boca==='susto'){ctx.fillStyle='#5a1a1a';ctx.beginPath();ctx.arc(hx+5,hy+5,2.2,0,7);ctx.fill();}
       else if(m.boca==='sonrisa'){ctx.strokeStyle='#5a1a1a';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hx+3,hy+3,3,0.2,Math.PI-0.2);ctx.stroke();}
     }
+    if(eq('lentes')){ctx.fillStyle='#111';ctx.fillRect(hx+1,hy-2,8,4);ctx.fillRect(hx-4,hy-1,5,1.5);}
+    if(eq('gorra')){ctx.fillStyle='#1565c0';ctx.beginPath();ctx.arc(hx,hy-3,9.8,Math.PI,0);ctx.closePath();ctx.fill();ctx.fillRect(hx+2,hy-5,12,3);}
     if(m.silbido){ctx.strokeStyle='#555';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hx+15,hy+2,3,-1,1);ctx.arc(hx+19,hy+2,6,-1,1);ctx.stroke();}
   }
   function modeloKiara(ctx,pose){
@@ -76,6 +79,11 @@ const Personajes=(()=>{
     linea(ctx,m.patas,'#a47148',3);
     ctx.fillStyle='#d4a373';
     ctx.beginPath();ctx.ellipse(0,-14,13,7,0,0,7);ctx.fill();
+    if(eq('sueter')){
+      ctx.fillStyle='#d32f2f';ctx.beginPath();ctx.ellipse(2,-14,10,7.2,0,0,7);ctx.fill();
+      ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-4,-20);ctx.lineTo(-4,-8);ctx.moveTo(2,-21);ctx.lineTo(2,-7);ctx.moveTo(8,-20);ctx.lineTo(8,-8);ctx.stroke();
+    }
+    ctx.fillStyle='#d4a373';
     ctx.beginPath();ctx.moveTo(8,-26);ctx.lineTo(8,-38);ctx.lineTo(14,-28);ctx.moveTo(15,-28);ctx.lineTo(21,-38);ctx.lineTo(20,-25);ctx.fill();
     ctx.beginPath();ctx.arc(14,-22,7,0,7);ctx.fill();
     ctx.fillStyle='#e9c9a0';
@@ -88,7 +96,13 @@ const Personajes=(()=>{
       ctx.fillStyle='#222';ctx.beginPath();ctx.arc(24,-20,1.4,0,7);ctx.fill();
     }
     ctx.fillStyle='#222';ctx.beginPath();ctx.arc(16,-24,1.4,0,7);ctx.fill();
-    ctx.strokeStyle='#e91e63';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,-17);ctx.quadraticCurveTo(13,-14,17,-17);ctx.stroke();
+    ctx.strokeStyle={rojo:'#e91e63',azul:'#1e88e5',dorado:'#ffc107'}[eq('collar')||'rojo']||'#e91e63';
+    ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(9,-17);ctx.quadraticCurveTo(13,-14,17,-17);ctx.stroke();
+    if(eq('mono')){
+      ctx.fillStyle='#ec407a';ctx.beginPath();ctx.moveTo(14,-30);ctx.lineTo(9,-34);ctx.lineTo(9,-26);ctx.closePath();
+      ctx.moveTo(14,-30);ctx.lineTo(19,-34);ctx.lineTo(19,-26);ctx.closePath();ctx.fill();
+      ctx.beginPath();ctx.arc(14,-30,1.8,0,7);ctx.fill();
+    }
   }
 
   // ---------- Fotos del jugador ----------

@@ -1,9 +1,14 @@
 package com.turbomonedas.juego;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.view.WindowManager;
@@ -14,6 +19,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import java.io.OutputStream;
 import java.util.Locale;
 
 /**
@@ -163,6 +169,50 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void buscarActualizacion() {
             actualizador.buscar(true);
+        }
+
+        /** Comparte un récord: imagen PNG (Android 10+) y texto del reto, p. ej. por WhatsApp. */
+        @JavascriptInterface
+        public void compartir(String texto, String imagenDataUrl) {
+            runOnUiThread(() -> compartirRecord(texto, imagenDataUrl));
+        }
+    }
+
+    private void compartirRecord(String texto, String imagenDataUrl) {
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        Uri imagen = (imagenDataUrl != null && Build.VERSION.SDK_INT >= 29) ? guardarImagen(imagenDataUrl) : null;
+        if (imagen != null) {
+            intent.setType("image/png");
+            intent.putExtra(Intent.EXTRA_STREAM, imagen);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } else {
+            intent.setType("text/plain");
+        }
+        intent.putExtra(Intent.EXTRA_TEXT, texto);
+        try {
+            startActivity(Intent.createChooser(intent, "Compartir récord"));
+        } catch (Exception ignorada) {
+            // no hay apps para compartir
+        }
+    }
+
+    /** Guarda la imagen del récord en Imágenes/Merudichis y regresa su dirección para compartirla. */
+    private Uri guardarImagen(String dataUrl) {
+        try {
+            byte[] bytes = Base64.decode(dataUrl.substring(dataUrl.indexOf(',') + 1), Base64.DEFAULT);
+            ContentValues v = new ContentValues();
+            v.put(MediaStore.Images.Media.DISPLAY_NAME, "merudichis_record_" + System.currentTimeMillis() + ".png");
+            v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
+            v.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Merudichis");
+            Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+            if (uri == null) return null;
+            try (OutputStream salida = getContentResolver().openOutputStream(uri)) {
+                if (salida == null) return null;
+                salida.write(bytes);
+            }
+            return uri;
+        } catch (Exception e) {
+            return null;
         }
     }
 
