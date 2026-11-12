@@ -1,23 +1,28 @@
-# Turbo Monedas
+# Merudichis Capuchinis
 
-Juego para Android: nivel 1 de plataformas 2D y nivel 2 de carreras en 3D, con el personaje creado desde una foto.
+Juego para Android con la perrita Kiara: nivel 1 de plataformas 2D (bloques que se rompen con el puño, bloques ? y el poder de Kiara) y nivel 2 de carreras en 3D. Los personajes pueden usar fotos reales por pose.
 
 ## Instalar en el celular
 
 1. Abre la sección **Releases** de este repositorio desde el celular.
-2. Descarga `TurboMonedas.apk` de la versión más reciente.
+2. Descarga `MerudichisCapuchinis.apk` de la versión más reciente.
 3. Ábrelo y permite "instalar apps de origen desconocido".
 
+Ya instalada, la app revisa sola si hay versión nueva al abrirse (también en Configuración → Buscar actualizaciones).
+
 Cada cambio que se sube a `main` compila un APK nuevo automáticamente (pestaña **Actions**).
-Se instala encima del anterior sin perder tu foto ni tu configuración.
+Se instala encima del anterior sin perder fotos ni configuración.
 
 ## Estructura
 
 - `app/src/main/assets/index.html` y `app/src/main/assets/js/` — el juego (HTML + JavaScript)
   - `base.js` pantalla, configuración, voz, sonido y controles
-  - `nivel1-plataformas.js` nivel 1
-  - `nivel2-carrera.js` nivel 2
-  - `pantallas.js` foto del personaje y menús
+  - `personajes.js` modelos por default y fotos reales por pose (jugador y Kiara)
+  - `nivel1-plataformas.js` nivel 1: bloques, enemigos y meta
+  - `kiara.js` poder de Kiara (ataca, ladra y paraliza, o se hace grande para montarla)
+  - `nivel2-carrera.js` nivel 2: Gran Premio
+  - `pantallas.js` menús, configuración y pantalla de fotos
   - `principal.js` bucle del juego y cambio de nivel
-- `app/src/main/java/.../MainActivity.java` — contenedor Android (pantalla completa y selector de fotos)
+- `app/src/main/java/.../MainActivity.java` — contenedor Android (pantalla completa, selector de archivos, voz)
+- `app/src/main/java/.../Actualizador.java` — actualización automática desde Releases
 - `.github/workflows/compilar-apk.yml` — compilación automática del APK

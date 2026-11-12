@@ -1,4 +1,4 @@
-// Turbo Monedas · foto del personaje, menús y configuración
+// Merudichis Capuchinis · foto del personaje, menús y configuración
 'use strict';
 // ---------- Foto del personaje ----------
 function setFaceFromImage(img,save){
@@ -35,11 +35,32 @@ function cfgHTML(){
   <button class="btn" data-a="update">🔄 Buscar actualizaciones</button>`:''}
   <button class="btn go" data-a="back">✔ Listo</button>`;
 }
+// Pantalla de fotos: una casilla por pose, con el modelo o la foto que subió el jugador
+function fotosHTML(){
+  const celda=p=>`<div class="slot"><canvas data-pose="${p.id}" width="144" height="168"></canvas><div class="sl">${p.nombre}</div>
+    <label class="mini" for="f_${p.id}">${Personajes.tiene(p.id)?'Cambiar':'Subir'}<input type="file" accept="image/*" id="f_${p.id}" data-foto="${p.id}"></label>
+    ${Personajes.tiene(p.id)?`<button class="mini off" data-a="qf-${p.id}">Quitar</button>`:''}</div>`;
+  return `<h1>Fotos de personajes</h1>
+  <p class="hint">De perfil mirando a la derecha, cuerpo completo, misma ropa y luz. Mejor sin fondo (en la Galería: mantén presionada la persona y guárdala como imagen). Donde no subas foto se usa el modelo.</p>
+  <p class="sub" style="margin:10px 0 0">Tú</p><div class="grid">${POSES_HEROE.map(celda).join('')}</div>
+  <p class="sub" style="margin:10px 0 0">Kiara</p><div class="grid">${POSES_KIARA.map(celda).join('')}</div>
+  <p class="hint">Cuando Kiara se hace grande se usa la foto K1 ampliada.</p>
+  <div class="msg" id="fmsg"></div><button class="btn go" data-a="back">✔ Listo</button>`;
+}
+function pintarMiniaturas(){
+  for(const c of card.querySelectorAll('canvas[data-pose]')){
+    const g=c.getContext('2d'),id=c.dataset.pose;
+    g.clearRect(0,0,c.width,c.height);
+    if(id.startsWith('k_'))Personajes.kiara(g,id,c.width/2,c.height-14,1,90);
+    else Personajes.heroe(g,id,c.width/2,c.height-10,1,140);
+  }
+}
 function showOverlay(){
   clearTouches();
   pauseBtn.style.display='none';overlay.style.display='flex';
   if(view==='cfg'){card.innerHTML=cfgHTML();return;}
-  const cfgBtn=`<button class="btn" data-a="cfg">⚙ Configuración</button>`;
+  if(view==='fotos'){card.innerHTML=fotosHTML();pintarMiniaturas();return;}
+  const cfgBtn=`<button class="btn" data-a="fotos">📸 Fotos de personajes</button><button class="btn" data-a="cfg">⚙ Configuración</button>`;
   const photo=`<div class="face"><canvas id="prev" width="96" height="96" style="width:96px;height:96px"></canvas></div>
     <label class="btn" for="file">📷 Tomar o elegir foto<input type="file" accept="image/*" id="file"></label>
     <div class="msg" id="msg"></div>`;
@@ -51,10 +72,10 @@ function showOverlay(){
     :'◀ ▶ moverse · ⤒ saltar (mantén para saltar más alto).';
   const ctl2=cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.'
     :'Mantén el dedo del lado izquierdo para girar a la izquierda y del derecho para girar a la derecha. Desliza hacia arriba para brincar.';
-  const hint1=`<b>Nivel 1:</b> ${ctl1} Pisa a los enemigos; las flechas amarillas dan velocidad y el resorte rojo te lanza. Si te golpean pierdes tus monedas; sin monedas pierdes una vida.`;
+  const hint1=`<b>Nivel 1:</b> ${ctl1} Salta y golpea los bloques con el puño: los ladrillos se rompen y los bloques ? dan monedas o el hueso de Kiara. Kiara te ayuda 10 segundos: ataca, ladra y paraliza, o se hace grande para que la montes. Si te golpean pierdes tus monedas; sin monedas pierdes una vida.`;
   const hint2=`<b>Nivel 2:</b> El auto acelera solo. ${ctl2} Las monedas suben tu velocidad máxima, las franjas amarillas son turbo y los charcos negros te hacen derrapar. Son 3 vueltas.`;
   const hint=t=>`<p class="hint">Gira el celular en horizontal.<br>${t}</p>`;
-  if(state==='menu') card.innerHTML=`<h1>TURBO MONEDAS</h1><p class="sub">Prototipo · 2 niveles</p>${photo}
+  if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · 2 niveles</p>${photo}
     <button class="btn go" data-a="play1">▶ Nivel 1 · Plataformas</button>
     <button class="btn go" data-a="play2">🏁 Nivel 2 · Gran Premio</button>${autos}${cfgBtn}${hint(hint1+'<br>'+hint2)}`;
   else if(state==='pause') card.innerHTML=`<h1>Pausa</h1>${photo}<button class="btn go" data-a="resume">▶ Continuar</button>
@@ -79,6 +100,8 @@ overlay.addEventListener('click',e=>{
   const a=b.dataset.a;
   startAudio();
   if(a==='cfg'){view='cfg';showOverlay();return;}
+  if(a==='fotos'){view='fotos';showOverlay();return;}
+  if(a.startsWith('qf-')){Personajes.quitar(a.slice(3));showOverlay();return;}
   if(a.startsWith('mode-')){cfg.mode=a.slice(5);saveCfg();showOverlay();return;}
   if(a==='swap'){cfg.swap=!cfg.swap;saveCfg();showOverlay();return;}
   if(a==='voice'){cfg.voice=!cfg.voice;saveCfg();showOverlay();return;}
@@ -96,6 +119,15 @@ overlay.addEventListener('click',e=>{
   state='play';overlay.style.display='none';pauseBtn.style.display='block';
 });
 overlay.addEventListener('change',e=>{
+  if(e.target.dataset&&e.target.dataset.foto&&e.target.files[0]){
+    const id=e.target.dataset.foto, m=()=>document.getElementById('fmsg');
+    m().textContent='Procesando foto…';
+    Personajes.guardar(id,e.target.files[0]).then(guardada=>{
+      showOverlay();
+      m().textContent=guardada?'¡Listo!':'Se usará en esta partida, pero el celular no tiene espacio para guardarla.';
+    }).catch(()=>{m().textContent='No se pudo leer esa imagen. Prueba con otra (JPG o PNG).';});
+    return;
+  }
   if(e.target.id==='vfile'&&e.target.files[0]){
     const f=e.target.files[0], m=()=>document.getElementById('vmsg');
     if(f.size>3000000){m().textContent='El audio es muy largo; graba solo 1 o 2 segundos.';return;}

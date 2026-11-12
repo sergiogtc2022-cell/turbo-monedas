@@ -1,4 +1,4 @@
-// Turbo Monedas · bucle principal y cambio de nivel
+// Merudichis Capuchinis · bucle principal y cambio de nivel
 'use strict';
 const NIVELES={1:Nivel1,2:Nivel2};
 

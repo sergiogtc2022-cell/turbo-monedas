@@ -1,4 +1,4 @@
-// Turbo Monedas · base compartida: pantalla, configuración, voz, sonido, entrada y dibujos comunes
+// Merudichis Capuchinis · base compartida: pantalla, configuración, voz, sonido, entrada y dibujos comunes
 'use strict';
 const cv=document.getElementById('c'), cx=cv.getContext('2d');
 const overlay=document.getElementById('overlay'), card=document.getElementById('card'), pauseBtn=document.getElementById('pause');
@@ -30,6 +30,15 @@ function primeTTS(){ // Android necesita "despertar" la voz con un toque del usu
   if(ttsPrimed||!window.speechSynthesis)return; ttsPrimed=true;
   try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(_){}
 }
+// Dice una frase con la voz del teléfono (no usa la grabación del jugador)
+function hablar(texto){
+  if(!cfg.voice)return;
+  if(window.AndroidVoz){try{if(window.AndroidVoz.hablar(texto))return;}catch(_){}}
+  if(!window.speechSynthesis)return;
+  try{speechSynthesis.cancel();speechSynthesis.resume();
+    const u=new SpeechSynthesisUtterance(texto);u.lang=esVoice?esVoice.lang:'es-MX';if(esVoice)u.voice=esVoice;
+    u.rate=1.1;u.pitch=1.2;speechSynthesis.speak(u);}catch(_){}
+}
 function say(force){
   if(!cfg.voice&&!force)return;
   if(voiceBuf&&ac){try{const src=ac.createBufferSource(),g=ac.createGain();g.gain.value=1.2;src.buffer=voiceBuf;src.connect(g).connect(ac.destination);src.start();return;}catch(_){}}
@@ -57,7 +66,12 @@ const sfx={
   jump:()=>beep(300,750,.15,'square',.045), stomp:()=>beep(420,110,.16,'triangle',.12),
   hurt:()=>beep(520,90,.4,'sawtooth',.06), spring:()=>beep(200,1300,.3,'triangle',.1),
   boost:()=>beep(250,1600,.3,'sawtooth',.035), check:()=>beep(660,990,.2,'triangle',.1),
-  win:()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0,.22,'square',.06),i*130))
+  win:()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0,.22,'square',.06),i*130)),
+  romper:()=>{for(let i=0;i<4;i++)setTimeout(()=>beep(180+Math.random()*120,60,.08,'square',.06),i*25)},
+  tock:()=>beep(140,90,.08,'square',.06),
+  item:()=>[392,523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,0,.1,'triangle',.08),i*70)),
+  ladrido:()=>{beep(620,300,.09,'square',.07);setTimeout(()=>beep(560,280,.1,'square',.07),130)},
+  silbido:()=>{beep(1300,1900,.18,'sine',.08);setTimeout(()=>beep(1900,1400,.22,'sine',.08),190)}
 };
 
 // ---------- Entrada ----------

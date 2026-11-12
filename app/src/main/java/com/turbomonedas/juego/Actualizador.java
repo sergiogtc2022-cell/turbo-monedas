@@ -61,7 +61,7 @@ class Actualizador {
             try {
                 HttpURLConnection c = (HttpURLConnection) new URL(URL_ULTIMA).openConnection();
                 c.setRequestProperty("Accept", "application/vnd.github+json");
-                c.setRequestProperty("User-Agent", "TurboMonedas");
+                c.setRequestProperty("User-Agent", "MerudichisCapuchinis");
                 c.setConnectTimeout(8000);
                 c.setReadTimeout(8000);
                 int codigo = c.getResponseCode();
@@ -110,7 +110,7 @@ class Actualizador {
         if (actividad.isFinishing()) return;
         new AlertDialog.Builder(actividad)
                 .setTitle("Nueva versión disponible")
-                .setMessage("Hay una versión nueva de Turbo Monedas (" + etiqueta + "). "
+                .setMessage("Hay una versión nueva de Merudichis Capuchinis (" + etiqueta + "). "
                         + "¿Actualizar ahora? Tu foto y tu configuración se conservan.")
                 .setPositiveButton("Actualizar", (d, w) -> descargar(url, etiqueta))
                 .setNegativeButton("Después", null)
@@ -128,11 +128,11 @@ class Actualizador {
         }
         DownloadManager dm = (DownloadManager) actividad.getSystemService(Context.DOWNLOAD_SERVICE);
         DownloadManager.Request r = new DownloadManager.Request(Uri.parse(url));
-        r.setTitle("Turbo Monedas " + etiqueta);
+        r.setTitle("Merudichis Capuchinis " + etiqueta);
         r.setMimeType("application/vnd.android.package-archive");
         r.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
         r.setDestinationInExternalFilesDir(actividad, Environment.DIRECTORY_DOWNLOADS,
-                "TurboMonedas-" + etiqueta + ".apk");
+                "MerudichisCapuchinis-" + etiqueta + ".apk");
         idDescarga = dm.enqueue(r);
         aviso("Descargando actualización…");
     }

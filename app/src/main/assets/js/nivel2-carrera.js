@@ -1,4 +1,4 @@
-// Turbo Monedas · Nivel 2: Gran Premio (carrera en pseudo-3D con carretera por segmentos)
+// Merudichis Capuchinis · Nivel 2: Gran Premio (carrera en pseudo-3D con carretera por segmentos)
 'use strict';
 
 // Autos que puede elegir el jugador (formas genéricas, sin marcas)

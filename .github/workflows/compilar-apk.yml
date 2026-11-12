@@ -25,12 +25,12 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
-          cp app/build/outputs/apk/debug/app-debug.apk TurboMonedas.apk
+          cp app/build/outputs/apk/debug/app-debug.apk MerudichisCapuchinis.apk
 
       - name: Publicar versión para descargar
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v0.1.${{ github.run_number }}
-          name: Turbo Monedas v0.1.${{ github.run_number }}
-          body: Descarga TurboMonedas.apk desde tu celular e instálalo.
-          files: TurboMonedas.apk
+          name: Merudichis Capuchinis v0.1.${{ github.run_number }}
+          body: Descarga MerudichisCapuchinis.apk desde tu celular e instálalo.
+          files: MerudichisCapuchinis.apk
