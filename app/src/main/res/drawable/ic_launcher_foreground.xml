@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Moneda -->
+    <path
+        android:fillColor="#C98A00"
+        android:pathData="M54,30a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z" />
+    <path
+        android:fillColor="#FFD23F"
+        android:pathData="M54,33a21,21 0,1 1,0 42a21,21 0,1 1,0 -42z" />
+    <!-- Rayo de velocidad -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M57,40 L45,56 L53,56 L50,68 L63,51 L55,51 Z" />
+</vector>

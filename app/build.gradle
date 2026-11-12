@@ -1,0 +1,44 @@
+plugins {
+    id 'com.android.application'
+}
+
+// En GitHub Actions cada compilación sube el número de versión para que el APK se instale como actualización
+def numeroCompilacion = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'com.turbomonedas.juego'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.turbomonedas.juego"
+        minSdk 26
+        targetSdk 35
+        versionCode numeroCompilacion
+        versionName "0.1." + numeroCompilacion
+    }
+
+    // Llave fija: así cada APK nuevo se instala encima del anterior sin desinstalar
+    signingConfigs {
+        fija {
+            storeFile file('turbo.keystore')
+            storePassword 'turbo123'
+            keyAlias 'turbo'
+            keyPassword 'turbo123'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.fija
+        }
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.fija
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
