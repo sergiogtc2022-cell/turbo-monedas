@@ -128,7 +128,7 @@ cv.addEventListener('pointerdown',e=>{
   let role='jump';
   if(level===2)role='volante';
   else if(level===3)role='swipe';
-  else if(cfg.mode==='touch'||(level!==1&&level!=='1px')){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
+  else if(cfg.mode==='touch'||!(level===1||esPixel(level))){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
   touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,sx:e.clientX,cx:e.clientX,dx:0,swipe:false,usado:false});
   updTouchInput();
 });

@@ -6,11 +6,16 @@ const PixelArt=(()=>{
     y:'#f7b500',Y:'#ffe39a',o:'#b06a00',u:'#9c6a40',U:'#5f3a1c',s:'#a9a9a9',S:'#6b6b6b',L:'#e6e6e6',
     p:'#8a4cc0',P:'#3a1d4d',e:'#ffffff',K:'#000000',r:'#d82800',c:'#ffd23f',C:'#c98a00'};
   const cache={};
+  let temaId='pradera',otros={};           // colores que cambian según la temática del nivel
+  const color=ch=>otros[ch]||PALETA[ch];
+  function tema(id,colores){temaId=id;otros=colores||{};}
   function sprite(nombre,filas){
-    if(cache[nombre])return cache[nombre];
+    const clave=nombre+'|'+temaId;
+    if(cache[clave])return cache[clave];
+    nombre=clave;
     const c=document.createElement('canvas');c.width=16;c.height=16;const g=c.getContext('2d');
     filas.forEach((f,y)=>{f=(f+'................').slice(0,16);
-      for(let x=0;x<16;x++){const ch=f[x];if(ch!=='.'&&PALETA[ch]){g.fillStyle=PALETA[ch];g.fillRect(x,y,1,1);}}});
+      for(let x=0;x<16;x++){const ch=f[x];if(ch!=='.'&&color(ch)){g.fillStyle=color(ch);g.fillRect(x,y,1,1);}}});
     return cache[nombre]=c;
   }
   const PASTO=[
@@ -209,5 +214,5 @@ const PixelArt=(()=>{
     g.fillStyle=PALETA.k;g.fillRect(x-1,y+1,14,6);circulo(g,x+1,y+2,3,PALETA.k);circulo(g,x+1,y+6,3,PALETA.k);circulo(g,x+11,y+2,3,PALETA.k);circulo(g,x+11,y+6,3,PALETA.k);
     g.fillStyle='#fff8e1';g.fillRect(x,y+2,12,4);circulo(g,x+1,y+2,2,'#fff8e1');circulo(g,x+1,y+6,2,'#fff8e1');circulo(g,x+11,y+2,2,'#fff8e1');circulo(g,x+11,y+6,2,'#fff8e1');
   }
-  return {tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
+  return {tema,tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
 })();

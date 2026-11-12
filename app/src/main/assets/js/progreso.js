@@ -1,7 +1,10 @@
 // Merudichis Capuchinis · progreso guardado en el celular: monedas del banco, compras, récords y estrellas por nivel
 'use strict';
-const NOMBRES_NIVEL={1:'Plataformas','1px':'Plataformas · Pixel art',2:'Gran Premio',3:'La Viborita',4:'Nivel de Kiara',5:'Zombie Gigante'};
-const ORDEN_NIVELES=[1,'1px',2,3,4,5];
+const NOMBRES_NIVEL={1:'Plataformas','1px':'Pixel · Pradera',px2:'Pixel · Desierto',px3:'Pixel · Cueva',px4:'Pixel · Montaña nevada',2:'Gran Premio',3:'La Viborita',4:'Nivel de Kiara',5:'Zombie Gigante'};
+const ORDEN_NIVELES=[1,'1px','px2','px3','px4',2,3,4,5];
+const ETIQUETA_NIVEL={'1px':'1-1',px2:'1-2',px3:'1-3',px4:'1-4'};
+const etiquetaNivel=n=>ETIQUETA_NIVEL[n]||String(n);
+const esPixel=n=>!!ETIQUETA_NIVEL[n];
 const siguienteNivel=n=>{const i=ORDEN_NIVELES.indexOf(n);return i>=0&&i<ORDEN_NIVELES.length-1?ORDEN_NIVELES[i+1]:null;};
 const TOTAL_NIVELES=5;
 const MINIJUEGOS={kiaraman:'Kiara-Man',trastes:'Atrapa los trastes',saltarina:'Kiara saltarina',memorama:'Memorama familiar'};
@@ -65,7 +68,7 @@ function recordsHTML(){
   let filas='<p class="sub" style="margin:10px 0 0">Historia</p>';
   for(const n of ORDEN_NIVELES){
     const r=Progreso.record(n);
-    filas+=`<div class="opt shop"><b>${n==='1px'?'1':n}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · ⏱ ${fmtSeg(r.tiempo)} · 🪙 ${r.monedas}`:'Sin jugar todavía'}</span></b>
+    filas+=`<div class="opt shop"><b>${etiquetaNivel(n)}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · ⏱ ${fmtSeg(r.tiempo)} · 🪙 ${r.monedas}`:'Sin jugar todavía'}</span></b>
       ${r?`<button class="pill" data-a="share-${n}">Compartir</button>`:''}</div>`;
   }
   filas+='<p class="sub" style="margin:10px 0 0">Minijuegos</p>';
@@ -80,7 +83,7 @@ function recordsHTML(){
 function datosRecord(k){
   if(MINIJUEGOS[k]){const p=Progreso.puntaje(k);return p?{titulo:MINIJUEGOS[k],grande:`${p} puntos`,linea:'Minijuego',texto:`Hice ${p} puntos en ${MINIJUEGOS[k]} de Merudichis Capuchinis. ¿Me ganas?`}:null;}
   const r=Progreso.record(k);
-  return r?{titulo:`Nivel ${k==='1px'?1:k} · ${NOMBRES_NIVEL[k]}`,grande:textoEstrellas(r.estrellas),linea:`Tiempo ${fmtSeg(r.tiempo)}   ·   Monedas ${r.monedas}`,
+  return r?{titulo:`Nivel ${etiquetaNivel(k)} · ${NOMBRES_NIVEL[k]}`,grande:textoEstrellas(r.estrellas),linea:`Tiempo ${fmtSeg(r.tiempo)}   ·   Monedas ${r.monedas}`,
     texto:`Hice ${textoEstrellas(r.estrellas)} en el nivel ${k} (${NOMBRES_NIVEL[k]}) de Merudichis Capuchinis: ${fmtSeg(r.tiempo)} y ${r.monedas} monedas. ¿Me ganas?`}:null;
 }
 // Arma una imagen con el récord para mandarla por WhatsApp

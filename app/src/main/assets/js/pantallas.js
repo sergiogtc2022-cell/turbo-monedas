@@ -78,6 +78,9 @@ function ayudaNivel(n){
   return {
     1:`${ctlPlat} Golpea los bloques con el puño: los ladrillos se rompen, los ? dan monedas o el hueso de Kiara. Si golpeas muchas veces un bloque duro te mareas.`,
     '1px':`${ctlPlat} Versión pixel art: si mantienes la dirección empiezas a correr y se llena el medidor P (abajo); con el medidor lleno corres y saltas más. Mantén el salto para llegar más alto.`,
+    px2:`${ctlPlat} Desierto: igual que el 1-1 pero más largo, con pirámides y pozos de picos.`,
+    px3:`${ctlPlat} Cueva: túneles bajos con techo de ladrillo (se rompe con el puño) e islas sobre los pozos.`,
+    px4:`${ctlPlat} Montaña nevada: el suelo es hielo y resbala, frena con tiempo. Usa los resortes para subir.`,
     2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
     3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
     4:`${ctlPlat} Juegas con Kiara: busca 5 huesos. 👃 olfatea para ver hacia dónde están, quédate quieta encima para excavar y 🐶 ladra para paralizar zombies. Al final llévaselos a tu dueño.`,
@@ -92,7 +95,7 @@ function nivelesHTML(){
   let h='<h1>Niveles</h1>';
   for(const n of ORDEN_NIVELES){
     const r=Progreso.record(n);
-    h+=`<div class="opt shop"><b>${n==='1px'?'1':n}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
+    h+=`<div class="opt shop"><b>${etiquetaNivel(n)}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
       <button class="pill" data-a="play${n}">▶ Jugar</button></div>`;
     if(n===2){
       const autoBtn=k=>`<button class="pill ${cfg.car===k?'':'off'}" data-a="car-${k}" style="${cfg.car===k?'background:'+(Progreso.equipo('pintura')||AUTOS[k].color)+';color:'+(k==='hatch'&&!Progreso.equipo('pintura')?'#222':'#fff'):''}">${AUTOS[k].nombre}</button>`;
@@ -188,7 +191,7 @@ overlay.addEventListener('click',e=>{
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}
   if(a==='home'){state='menu';view='';startLevel(1);Musica.tocar('menu');showOverlay();return;}
   goFullscreen();
-  if(/^play(\d|1px)$/.test(a)){view='';const k=a.slice(4);startLevel(k==='1px'?k:+k);}
+  if(/^play(\d|1px|px\d)$/.test(a)){view='';const k=a.slice(4);startLevel(/^\d$/.test(k)?+k:k);}
   else if(a.startsWith('mini-')){view='';startLevel(a.slice(5));}
   else if(a==='restart')startLevel(level);
   for(const k in input)input[k]=false;
