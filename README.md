@@ -1,6 +1,6 @@
 # Merudichis Capuchinis
 
-Juego para Android con la perrita Kiara: 5 niveles (plataformas, Gran Premio, La Viborita, Nivel de Kiara y el Zombie Gigante), tienda, récords con estrellas y personajes con fotos reales por pose.
+Juego para Android con la perrita Kiara: modo Historia de 5 niveles (plataformas, Gran Premio, La Viborita, Nivel de Kiara y el Zombie Gigante), 5 minijuegos (Kiara-Man, Atrapa los trastes, Kiara saltarina, Defiende el patio y Memorama familiar), música chiptune original, tienda, récords y personajes con fotos reales por pose.
 
 ## Instalar en el celular
 
@@ -24,6 +24,8 @@ Se instala encima del anterior sin perder fotos ni configuración.
   - `nivel3-viborita.js` nivel 3: La Viborita
   - `nivel4-kiara.js` nivel 4: juegas con Kiara (olfatear, excavar, ladrar)
   - `nivel5-jefe.js` nivel 5: el Zombie Gigante
+  - `mini-kiaraman.js`, `mini-trastes.js`, `mini-saltarina.js`, `mini-patio.js`, `mini-memorama.js` minijuegos
+  - `musica.js` música chiptune original y fanfarrias de poderes
   - `progreso.js` banco de monedas, récords, estrellas y compartir récord
   - `tienda.js` tienda de accesorios y ventajas
   - `pantallas.js` menús, selector de niveles, configuración y pantalla de fotos

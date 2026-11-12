@@ -9,7 +9,7 @@ function activarKiara(){
   const modo=['ataca','ladra','grande'][Math.floor(Math.random()*3)];
   const grande=modo==='grande';
   P.llama=45;
-  sfx.silbido();
+  sfx.silbido();Musica.jingle(modo==='grande'?'gigante':'kiara');
   hablar('¡Ven, Kiara!');
   kiara={modo,t:kiaraDura(),x:Math.max(2,cam-40),y:Math.max(0,P.y-60),w:grande?34:24,h:grande?26:18,vx:0,vy:0,
     face:1,anim:0,ladra:0,montada:false,saliendo:false,onGround:false};
@@ -50,7 +50,7 @@ function actualizarKiara(){
   if(k.montada){
     k.x=P.x+P.w/2-k.w/2;k.y=P.y+P.h-k.h;k.face=P.face;k.anim+=Math.abs(P.vx)*0.08;
   } else {
-    let tx=P.x+P.w/2-P.face*34, prisa=7.5;
+    let tx=P.x+P.w/2-P.face*34, prisa=6.2;
     if(k.saliendo){tx=k.x+600;prisa=9;}
     else if(k.modo==='grande')tx=P.x+P.w/2;
     else if(k.modo==='ataca'){const e=enemigoCercano(k,330);if(e)tx=e.x+e.w/2;}

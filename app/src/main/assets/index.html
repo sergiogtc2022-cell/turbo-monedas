@@ -52,6 +52,14 @@
   #bLadra{right:calc(98px + env(safe-area-inset-right))}
   body.swap #bOlfa{right:auto;left:calc(20px + env(safe-area-inset-left))}
   body.swap #bLadra{right:auto;left:calc(98px + env(safe-area-inset-left))}
+  #dpad{position:fixed;display:none;width:156px;height:156px;bottom:calc(10px + env(safe-area-inset-bottom));right:calc(10px + env(safe-area-inset-right));z-index:3}
+  body.swap #dpad{right:auto;left:calc(10px + env(safe-area-inset-left))}
+  body.dpad #dpad{display:block}
+  body.dpad .ctl,body.mini .ctl{display:none}
+  #dpad div{position:absolute;width:52px;height:52px;border-radius:12px;background:rgba(255,255,255,.25);border:2px solid rgba(255,255,255,.65);
+            color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;touch-action:none}
+  #dpad div.on{background:rgba(255,255,255,.6)}
+  #pU{left:52px;top:0}#pD{left:52px;bottom:0}#pL{left:0;top:52px}#pR{right:0;top:52px}
   .shop{margin:6px 0;padding:6px 8px;background:rgba(255,255,255,.07);border-radius:10px}
   .estrellas{color:#ffd23f;letter-spacing:2px}
   .estrellas.grandes{font-size:38px;margin:4px 0}
@@ -67,10 +75,12 @@
 <div class="ctl" id="bJ">⤒</div>
 <div class="accion" id="bOlfa" aria-label="Olfatear">👃</div>
 <div class="accion" id="bLadra" aria-label="Ladrar">🐶</div>
+<div id="dpad"><div id="pU">▲</div><div id="pL">◀</div><div id="pR">▶</div><div id="pD">▼</div></div>
 <button id="pause" style="display:none">☰</button>
 <div id="overlay"><div class="card" id="card"></div></div>
 
 <script src="js/base.js"></script>
+<script src="js/musica.js"></script>
 <script src="js/progreso.js"></script>
 <script src="js/personajes.js"></script>
 <script src="js/nivel1-plataformas.js"></script>
@@ -79,6 +89,11 @@
 <script src="js/nivel3-viborita.js"></script>
 <script src="js/nivel4-kiara.js"></script>
 <script src="js/nivel5-jefe.js"></script>
+<script src="js/mini-kiaraman.js"></script>
+<script src="js/mini-trastes.js"></script>
+<script src="js/mini-saltarina.js"></script>
+<script src="js/mini-patio.js"></script>
+<script src="js/mini-memorama.js"></script>
 <script src="js/tienda.js"></script>
 <script src="js/pantallas.js"></script>
 <script src="js/principal.js"></script>

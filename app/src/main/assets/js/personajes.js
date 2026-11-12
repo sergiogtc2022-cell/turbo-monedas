@@ -20,6 +20,13 @@ const POSES_KIARA=[
   {id:'k_ataca',  nombre:'K5 Atacando'}
 ];
 
+const POSES_NINA=[
+  {id:'n_parada',nombre:'N1 Parada'},
+  {id:'n_lanza', nombre:'N2 Aventando'},
+  {id:'n_rie',   nombre:'N3 Riéndose'}
+];
+const MEMO_IDS=['memo_0','memo_1','memo_2','memo_3','memo_4','memo_5','memo_6','memo_7'];
+
 const Personajes=(()=>{
   // ---------- Modelos dibujados (pies en y=0, mirando a la derecha) ----------
   const HEROE={
@@ -41,7 +48,12 @@ const Personajes=(()=>{
     k_ladra: {patas:PATAS_QUIETA,boca:true},
     k_ataca: {patas:'M8 -9 L17 -6 M5 -9 L14 -3 M-8 -9 L-17 -4 M-5 -9 L-14 -1',cola:'M-12 -16 q-10 -2 -9 -10',boca:true,rot:-0.3}
   };
-  const ALTO_HEROE=70, ALTO_KIARA=38;   // altura de los modelos en sus propias unidades
+  const NINA={
+    n_parada:{b:'M-6 -42 L-11 -32 L-6 -26 M6 -42 L11 -32 L6 -26',boca:'traviesa'},
+    n_lanza: {b:'M-6 -42 L-12 -32 M6 -42 L10 -60',mano:[10,-62],boca:'traviesa'},
+    n_rie:   {b:'M-6 -42 L-2 -49 M6 -42 L2 -49',boca:'risa'}
+  };
+  const ALTO_HEROE=70, ALTO_KIARA=38, ALTO_NINA=66;   // altura de los modelos en sus propias unidades
   const cache={};
   const eq=k=>typeof Progreso!=='undefined'&&Progreso.equipo(k);   // accesorios comprados en la tienda
   const path=d=>cache[d]||(cache[d]=new Path2D(d));
@@ -105,10 +117,28 @@ const Personajes=(()=>{
     }
   }
 
+  function modeloNina(ctx,pose){
+    const m=NINA[pose]||NINA.n_parada;
+    linea(ctx,'M-3 -22 L-4 -3 M3 -22 L4 -3','#f1c27d',4);
+    ctx.fillStyle='#222';ctx.beginPath();ctx.ellipse(-4,-2,3.5,2,0,0,7);ctx.ellipse(5,-2,3.5,2,0,0,7);ctx.fill();
+    ctx.fillStyle='#ec407a';ctx.beginPath();ctx.moveTo(-6,-46);ctx.lineTo(6,-46);ctx.lineTo(12,-20);ctx.lineTo(-12,-20);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#fff';for(const [x,y] of [[-5,-30],[2,-36],[6,-26],[-1,-24]]){ctx.beginPath();ctx.arc(x,y,1.5,0,7);ctx.fill();}
+    linea(ctx,m.b,'#f1c27d',3.5);
+    if(m.mano){ctx.fillStyle='#f1c27d';ctx.beginPath();ctx.arc(m.mano[0],m.mano[1],3,0,7);ctx.fill();}
+    ctx.fillStyle='#6d3b1f';ctx.beginPath();ctx.arc(-9,-55,4.5,0,7);ctx.arc(9,-55,4.5,0,7);ctx.fill();   // coletas
+    ctx.fillStyle='#ffeb3b';ctx.fillRect(-8,-58,2.5,5);ctx.fillRect(6,-58,2.5,5);
+    ctx.fillStyle='#f1c27d';ctx.beginPath();ctx.arc(0,-54,8,0,7);ctx.fill();
+    ctx.fillStyle='#6d3b1f';ctx.beginPath();ctx.arc(0,-55,8,Math.PI*1.05,Math.PI*1.95);ctx.fill();
+    ctx.fillStyle='#222';ctx.beginPath();ctx.arc(-3,-54,1.2,0,7);ctx.arc(3,-54,1.2,0,7);ctx.fill();
+    ctx.strokeStyle='#8b1a1a';ctx.lineWidth=1.3;ctx.beginPath();
+    if(m.boca==='risa'){ctx.fillStyle='#8b1a1a';ctx.arc(0,-50,2.6,0,Math.PI);ctx.fill();}
+    else{ctx.moveTo(-3,-50);ctx.quadraticCurveTo(1,-48,4,-51);ctx.stroke();}
+  }
+
   // ---------- Fotos del jugador ----------
   const fotos={};                       // id de pose → canvas ya recortado
   const SUSTITUTOS={caminaA:['parado'],caminaB:['caminaA','parado'],salto:['cae','parado'],cae:['salto','parado'],
-    golpe:['parado'],llama:['parado'],monta:['parado'],victoria:['parado'],
+    golpe:['parado'],llama:['parado'],monta:['parado'],victoria:['parado'],n_lanza:['n_parada'],n_rie:['n_parada'],
     k_correA:['k_parada'],k_correB:['k_correA','k_parada'],k_ladra:['k_parada'],k_ataca:['k_correA','k_parada']};
   const clave=id=>'mc_foto_'+id;
 
@@ -127,6 +157,7 @@ const Personajes=(()=>{
   // x,y = centro de los pies; dir = 1 derecha, -1 izquierda; alto en pixeles
   const heroe=(ctx,pose,x,y,dir,alto)=>dibujar(ctx,imagenPara(pose,POSES_HEROE),modeloHeroe,ALTO_HEROE,pose,x,y,dir,alto);
   const kiara=(ctx,pose,x,y,dir,alto)=>dibujar(ctx,imagenPara(pose,POSES_KIARA),modeloKiara,ALTO_KIARA,pose,x,y,dir,alto);
+  const nina=(ctx,pose,x,y,dir,alto)=>dibujar(ctx,imagenPara(pose,POSES_NINA),modeloNina,ALTO_NINA,pose,x,y,dir,alto);
 
   // Reduce la foto, recorta los bordes transparentes y la guarda
   function procesar(img){
@@ -155,9 +186,10 @@ const Personajes=(()=>{
   }
   function quitar(id){delete fotos[id];try{localStorage.removeItem(clave(id))}catch(_){}}
   const tiene=id=>!!fotos[id];
-  for(const p of POSES_HEROE.concat(POSES_KIARA)){
-    try{const d=localStorage.getItem(clave(p.id));if(d)cargarImagen(d).then(im=>{fotos[p.id]=im;}).catch(()=>{});}catch(_){}
+  for(const id of POSES_HEROE.concat(POSES_KIARA,POSES_NINA).map(p=>p.id).concat(MEMO_IDS)){
+    try{const d=localStorage.getItem(clave(id));if(d)cargarImagen(d).then(im=>{fotos[id]=im;}).catch(()=>{});}catch(_){}
   }
+  const foto=id=>fotos[id]||null;
 
-  return {heroe,kiara,guardar,quitar,tiene};
+  return {heroe,kiara,nina,guardar,quitar,tiene,foto};
 })();

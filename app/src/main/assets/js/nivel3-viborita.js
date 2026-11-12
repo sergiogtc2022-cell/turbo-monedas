@@ -4,7 +4,7 @@ const Nivel3=(()=>{
   const C=24, R=13, META=30;
   const DIRS={u:{x:0,y:-1},d:{x:0,y:1},l:{x:-1,y:0},r:{x:1,y:0}};
   let vib=[], dir=DIRS.r, cola=[], crecer=0, tick=0, bloques=[], zombies=[], zombiesPend=[],
-      hueso=null, huesoT=0, kv=null, inv=0, raceF=0, prev={l:false,r:false,j:false,d:false}, avisoT=0;
+      hueso=null, huesoT=0, kv=null, inv=0, raceF=0, prev={}, avisoT=0;
   let celda=20, ox=0, oy=0;
 
   const ocupada=(x,y)=>vib.some(s=>s.x===x&&s.y===y)||bloques.some(b=>b.x===x&&b.y===y)||
@@ -31,7 +31,7 @@ const Nivel3=(()=>{
     reiniciarVibora();
     for(let i=0;i<5;i++)nuevoBloque();
     for(let i=0;i<3;i++)nuevoZombie();
-    prev={l:false,r:false,j:false,d:false};input.swipe=null;
+    prev={l:false,r:false,j:false,d:false,pu:false,pd:false,pl:false,pr:false};input.swipe=null;
   }
 
   function pedirGiro(n){
@@ -43,23 +43,17 @@ const Nivel3=(()=>{
   function leerControles(){
     if(input.swipe){pedirGiro(DIRS[input.swipe]);input.swipe=null;}
     const flanco=k=>input[k]&&!prev[k];
-    if(cfg.mode==='buttons'){                   // botones: ◀ ▶ giran respecto a hacia dónde va
-      const ult=cola.length?cola[cola.length-1]:dir;
-      if(flanco('l'))pedirGiro({x:ult.y,y:-ult.x});
-      if(flanco('r'))pedirGiro({x:-ult.y,y:ult.x});
-    } else {                                    // teclado: flechas absolutas
-      if(flanco('l'))pedirGiro(DIRS.l);
-      if(flanco('r'))pedirGiro(DIRS.r);
-      if(flanco('j'))pedirGiro(DIRS.u);
-      if(flanco('d'))pedirGiro(DIRS.d);
-    }
+    if(flanco('pu')||flanco('j'))pedirGiro(DIRS.u);           // cruz direccional en pantalla o flechas del teclado
+    if(flanco('pd')||flanco('d'))pedirGiro(DIRS.d);
+    if(flanco('pl')||flanco('l'))pedirGiro(DIRS.l);
+    if(flanco('pr')||flanco('r'))pedirGiro(DIRS.r);
     for(const k in prev)prev[k]=input[k];
     input.jp=false;
   }
 
   function choque(){
     lives--;sfx.hurt();
-    if(lives<=0){state='over';showOverlay();return;}
+    if(lives<=0){state='over';Musica.parar();Musica.jingle('perder');showOverlay();return;}
     reiniciarVibora();
   }
   function comer(b){
@@ -109,7 +103,7 @@ const Nivel3=(()=>{
 
   // Kiara corre por el tablero comiendo bloques por ti y ladrando a los zombies
   function activarKiaraV(){
-    sfx.silbido();hablar('¡Ven, Kiara!');
+    sfx.silbido();Musica.jingle('kiara');hablar('¡Ven, Kiara!');
     kv={x:0,y:Math.floor(R/2),t:kiaraDura(),mov:0,ladra:0,face:1,anim:0};
     kiaraMsg={texto:'¡Kiara te ayuda a comer!',t:120};
   }
@@ -142,10 +136,10 @@ const Nivel3=(()=>{
     moverKiaraV();
     if(hueso&&--hueso.t<=0)hueso=null;
     if(!hueso&&!kv&&--huesoT<=0){const p=libre(vib[0]);hueso={x:p.x,y:p.y,t:480};huesoT=900;}
-    const vel=Math.max(4,10-Math.floor(vib.length/5));
+    const vel=Math.max(6,13-Math.floor(vib.length/4));   // empieza lenta y acelera al crecer
     if(++tick>=vel){tick=0;mover();if(state!=='play')return;}
     if(vib.length>=META){
-      sfx.win();
+      Musica.parar();Musica.jingle('victoria');
       const seg=raceF/60;
       terminarNivel(3,seg,coins,1+(seg<90?1:0)+(lives>=vidasIniciales()?1:0),[`🐍 Llegaste a ${vib.length} de largo`,`❤ ${lives} vidas`]);
     }
@@ -189,8 +183,9 @@ const Nivel3=(()=>{
   }
   function draw(){
     cx.setTransform(dpr,0,0,dpr,0,0);
-    celda=Math.max(8,Math.floor(Math.min(W/C,(H-46)/R)));
-    ox=Math.floor((W-celda*C)/2);oy=Math.floor(46+((H-46)-celda*R)/2);
+    const libreX=W-(cfg.swap?0:170)-(cfg.swap?170:0);
+    celda=Math.max(8,Math.floor(Math.min(libreX/C,(H-46)/R)));
+    ox=Math.floor(cfg.swap?170+(libreX-celda*C)/2:(libreX-celda*C)/2);oy=Math.floor(46+((H-46)-celda*R)/2);
     cx.fillStyle='#2e5e2e';cx.fillRect(0,0,W,H);
     cx.fillStyle='#6d4c2f';cx.fillRect(ox-6,oy-6,celda*C+12,celda*R+12);
     for(let y=0;y<R;y++)for(let x=0;x<C;x++){cx.fillStyle=(x+y)%2?'#8bc34a':'#9ccc65';cx.fillRect(px(x),py(y),celda,celda);}
@@ -223,7 +218,7 @@ const Nivel3=(()=>{
     if(kv){const w=110,x=W/2-w/2+40;cx.fillStyle='rgba(0,0,0,.35)';cx.fillRect(x,14,w,10);cx.fillStyle='#ffb74d';cx.fillRect(x,14,w*kv.t/kiaraDura(),10);}
     cx.textAlign='center';
     if(avisoT>0){cx.font='bold 20px system-ui,Arial';cx.globalAlpha=Math.min(1,avisoT/30);
-      txt(cfg.mode==='buttons'?'◀ ▶ para girar · come bloques para crecer':'Desliza el dedo para girar · come bloques para crecer',W/2,H/2);cx.globalAlpha=1;}
+      txt('Usa la cruz o desliza el dedo · come bloques para crecer',W/2,H/2);cx.globalAlpha=1;}
     if(kiaraMsg.t>0){cx.font='bold 20px system-ui,Arial';txt(kiaraMsg.texto,W/2,H*0.25);}
     cx.textAlign='left';
   }

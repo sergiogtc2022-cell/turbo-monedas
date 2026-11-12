@@ -129,7 +129,10 @@ const Nivel2=(()=>{
 
     // dirección
     let s=0;
-    if(spinT>0)spinT--; else {if(input.l)s-=1;if(input.r)s+=1;}
+    if(spinT>0)spinT--;
+    else if(input.l||input.r){if(input.l)s-=1;if(input.r)s+=1;}        // botones o teclado
+    else if(cfg.volante==='inclinar')s=input.inclinacion;              // inclinar el celular
+    else if(input.volante!=null)s=input.volante;                       // arrastrar el dedo
     steer+=(s-steer)*0.25;
     const dx=dt*2*sp*yo.giro;
     px+=steer*dx;
@@ -154,7 +157,7 @@ const Nivel2=(()=>{
     const pseg=findSeg(pdist+PLAYER_Z);
     const d=pseg.decal;
     if(d&&hopT===0&&Math.abs(px-d.off)<d.w/2+PW*0.3){
-      if(d.t==='turbo'){if(boostT<60)sfx.boost();boostT=100;speed=Math.max(speed,MAXV*1.1);}
+      if(d.t==='turbo'){if(boostT<60){sfx.boost();Musica.jingle('turbo');}boostT=100;speed=Math.max(speed,MAXV*1.1);}
       else if(spinT===0){spinT=45;beep(600,150,.4,'sawtooth',.05);}
     }
     // monedas
@@ -200,7 +203,7 @@ const Nivel2=(()=>{
     }
     place=1+autos.filter(k=>k.dist>pdist+PLAYER_Z).length;
     if(pdist>=LAPS*trackLen){
-      finalPlace=place;sfx.win();
+      finalPlace=place;Musica.parar();Musica.jingle('victoria');
       const medalla=place===1?'🥇':place===2?'🥈':place===3?'🥉':'🏁';
       terminarNivel(2,raceF/60,coins,place===1?3:place<=3?2:1,[`${medalla} Llegaste ${place}° de ${autos.length+1}`,yo.nombre]);
     }
@@ -388,6 +391,16 @@ const Nivel2=(()=>{
   }
   function hud(){
     cx.setTransform(dpr,0,0,dpr,0,0);
+    for(const t of touches.values()){                 // volante bajo el dedo
+      if(t.role!=='volante')continue;
+      const k=Math.max(-70,Math.min(70,t.cx-t.sx));
+      cx.globalAlpha=.3;cx.strokeStyle='#fff';cx.lineWidth=6;cx.beginPath();cx.arc(t.sx,t.y0,48,0,7);cx.stroke();
+      cx.globalAlpha=.7;cx.fillStyle='#fff';cx.beginPath();cx.arc(t.sx+k*0.7,t.y0,20,0,7);cx.fill();cx.globalAlpha=1;
+    }
+    if(cfg.volante==='inclinar'&&state==='play'){
+      cx.fillStyle='rgba(255,255,255,.35)';cx.fillRect(W/2-60,H-14,120,6);
+      cx.fillStyle='#fff';cx.fillRect(W/2-3+input.inclinacion*57,H-18,6,14);
+    }
     const L=12;
     cx.font='bold 20px system-ui,Arial';cx.textBaseline='middle';
     cx.fillStyle='#ffd23f';cx.strokeStyle='#c98a00';cx.lineWidth=2;cx.beginPath();cx.ellipse(L+12,24,8,10,0,0,7);cx.fill();cx.stroke();

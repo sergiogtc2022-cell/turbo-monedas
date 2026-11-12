@@ -34,7 +34,7 @@ const Nivel5=(()=>{
   function herida(){
     if(P.inv>0||final)return;
     golpes++;lives--;sfx.hurt();bubble=100;say();P.golpeT=30;
-    if(lives<=0){state='over';showOverlay();return;}
+    if(lives<=0){state='over';Musica.parar();Musica.jingle('perder');showOverlay();return;}
     P.inv=110;P.vy=-7;P.vx=(P.x<jefe.x?-1:1)*5;
   }
   function romperMaceta(m){
@@ -56,11 +56,11 @@ const Nivel5=(()=>{
     if(input.jp){P.jumpBuf=P.aturdido>0?0:8;input.jp=false;}
     let dir=(input.r?1:0)-(input.l?1:0);
     if(P.aturdido>0){P.aturdido--;dir=0;}
-    const acc=P.onGround?0.5:0.32;
+    const acc=P.onGround?0.36:0.25;
     if(dir){P.vx+=dir*acc;P.face=dir;} else if(P.onGround){P.vx*=0.84;if(Math.abs(P.vx)<0.1)P.vx=0;} else P.vx*=0.985;
-    P.vx=Math.max(-6.5,Math.min(6.5,P.vx));
+    P.vx=Math.max(-4.8,Math.min(4.8,P.vx));
     P.coyote=P.onGround?6:P.coyote-1;
-    if(P.jumpBuf>0){P.jumpBuf--;if(P.coyote>0){P.vy=-11.6;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
+    if(P.jumpBuf>0){P.jumpBuf--;if(P.coyote>0){P.vy=-10.8;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
     if(P.jumping&&!input.j&&P.vy<-4)P.vy=-4;
     P.vy=Math.min(P.vy+0.6,14);
     moveX(P);moveY(P);
@@ -78,7 +78,7 @@ const Nivel5=(()=>{
       if(!final&&jefe.hp>0&&aabb(m,jefe)){
         m.fuera=true;romperMaceta(m);jefe.hp--;jefe.flash=40;jefe.pausa=50;sfx.stomp();
         kiaraMsg={texto:jefe.hp>0?`¡Le diste! Le quedan ${jefe.hp}`:'¡Ya casi! ¡Kiara, ven!',t:100};
-        if(jefe.hp<=0){final={kx:-40,t:0,mordio:false};sfx.silbido();hablar('¡Ven, Kiara!');}
+        if(jefe.hp<=0){final={kx:-40,t:0,mordio:false};sfx.silbido();Musica.jingle('kiara');hablar('¡Ven, Kiara!');}
       } else if(m.y+m.h>=G*T){m.fuera=true;romperMaceta(m);beep(200,80,.1,'square',.05);}
     }
     macetas=macetas.filter(m=>!m.fuera);
@@ -114,7 +114,7 @@ const Nivel5=(()=>{
       } else {
         final.tm++;
         if(final.tm>40){jefe.y-=2;jefe.x+=jefe.dir*-4;}       // sale volando del susto
-        if(final.tm===110){winT=60;sfx.win();}
+        if(final.tm===110){winT=60;Musica.parar();Musica.jingle('victoria');}
       }
     }
     for(const z of zapatos){

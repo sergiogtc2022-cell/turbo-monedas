@@ -24,6 +24,12 @@ function cfgHTML(){
   <div class="modes">${m('touch')}👆 Táctil</button>${m('auto')}🏃 Auto-correr</button>${m('buttons')}🎮 Botones</button></div>
   <div class="opt"><b>Lados<span>${cfg.swap?'Moverse a la derecha, saltar a la izquierda':'Moverse a la izquierda, saltar a la derecha'}</span></b>
     <button class="pill" data-a="swap">${cfg.swap?'Invertidos':'Normales'}</button></div>
+  <div class="opt"><b>Música<span>Melodías de cada nivel y efectos de poderes</span></b>
+    <button class="pill ${cfg.musica?'':'off'}" data-a="musica">${cfg.musica?'Sí':'No'}</button></div>
+  <div class="opt"><b>Volumen de la música</b><input type="range" id="vol" min="0" max="1" step="0.05" value="${cfg.volumen}" style="width:45%"></div>
+  <div class="opt"><b>Volante del Gran Premio<span>${cfg.volante==='inclinar'?'Inclinas el celular como volante':'Arrastras el dedo: más lejos = gira más'}</span></b></div>
+  <div class="modes"><button class="pill ${cfg.volante==='dedo'?'':'off'}" data-a="vol-dedo">👆 Dedo</button><button class="pill ${cfg.volante==='inclinar'?'':'off'}" data-a="vol-inclinar">📱 Inclinar</button>
+    ${cfg.volante==='inclinar'?`<button class="pill ${cfg.inclInv?'':'off'}" data-a="inclinv">Invertir</button>`:''}</div>
   <div class="opt"><b>Voz "¡Ora, zombie!"<span>Cuando un enemigo o un auto te choca</span></b>
     <button class="pill ${cfg.voice?'':'off'}" data-a="voice">${cfg.voice?'Sí':'No'}</button></div>
   <div class="opt" style="margin-top:6px"><b>Tu propia voz<span>${voiceData?'Usando tu grabación':'Graba "¡Ora, zombie!" con la grabadora del celular y elígela aquí'}</span></b></div>
@@ -45,13 +51,20 @@ function fotosHTML(){
   <p class="sub" style="margin:10px 0 0">Tú</p><div class="grid">${POSES_HEROE.map(celda).join('')}</div>
   <p class="sub" style="margin:10px 0 0">Kiara</p><div class="grid">${POSES_KIARA.map(celda).join('')}</div>
   <p class="hint">Cuando Kiara se hace grande se usa la foto K1 ampliada.</p>
+  <p class="sub" style="margin:10px 0 0">Niña traviesa (Atrapa los trastes)</p><div class="grid">${POSES_NINA.map(celda).join('')}</div>
+  <p class="sub" style="margin:10px 0 0">Memorama familiar (hasta 8 fotos de tu familia)</p>
+  <div class="grid">${MEMO_IDS.map((id,i)=>celda({id,nombre:'Foto '+(i+1)})).join('')}</div>
   <div class="msg" id="fmsg"></div><button class="btn go" data-a="back">✔ Listo</button>`;
 }
 function pintarMiniaturas(){
   for(const c of card.querySelectorAll('canvas[data-pose]')){
     const g=c.getContext('2d'),id=c.dataset.pose;
     g.clearRect(0,0,c.width,c.height);
-    if(id.startsWith('k_'))Personajes.kiara(g,id,c.width/2,c.height-14,1,90);
+    if(id.startsWith('memo_')){const im=Personajes.foto(id);
+      if(im){const s=Math.max(c.width/im.width,c.height/im.height);g.drawImage(im,(c.width-im.width*s)/2,(c.height-im.height*s)/2,im.width*s,im.height*s);}
+      else{g.fillStyle='#90a4ae';g.font='bold 60px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText('+',c.width/2,c.height/2);}}
+    else if(id.startsWith('k_'))Personajes.kiara(g,id,c.width/2,c.height-14,1,90);
+    else if(id.startsWith('n_'))Personajes.nina(g,id,c.width/2,c.height-10,1,140);
     else Personajes.heroe(g,id,c.width/2,c.height-10,1,140);
   }
 }
@@ -65,7 +78,12 @@ function ayudaNivel(n){
     2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
     3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
     4:`${ctlPlat} Juegas con Kiara: busca 5 huesos. 👃 olfatea para ver hacia dónde están, quédate quieta encima para excavar y 🐶 ladra para paralizar zombies. Al final llévaselos a tu dueño.`,
-    5:`${ctlPlat} Golpea con el puño los bloques de maceta cuando el Zombie Gigante pase debajo. Esquiva sus zapatos. Tres golpes y Kiara da la mordida final.`
+    5:`${ctlPlat} Golpea con el puño los bloques de maceta cuando el Zombie Gigante pase debajo. Esquiva sus zapatos. Tres golpes y Kiara da la mordida final.`,
+    kiaraman:'Usa la cruz o desliza el dedo. Come todas las croquetas; el hueso grande asusta a los ratones y Kiara puede atraparlos.',
+    trastes:'Mueve el dedo y el personaje lo sigue. Atrapa platos, tazas, vasos y ollas; no atrapes globos de agua ni zapatos. El hueso trae a Kiara.',
+    saltarina:'Toca o arrastra el dedo hacia donde quieres que vaya Kiara (o inclina el celular si lo elegiste). Rebota hacia arriba lo más alto que puedas.',
+    patio:'Elige un ayudante arriba y toca el pasto para ponerlo. Kiara ladra a los zombies, la maceta los detiene y el plato da croquetas.',
+    memorama:'Toca dos cartas para voltearlas y encuentra los pares. Sube fotos de tu familia en 📸 Fotos.'
   }[n];
 }
 function nivelesHTML(){
@@ -81,7 +99,24 @@ function nivelesHTML(){
   }
   return h+'<button class="btn go" data-a="back">✔ Listo</button>';
 }
+function minijuegosHTML(){
+  let h='<h1>Minijuegos</h1>';
+  for(const id in MINIJUEGOS){
+    const p=Progreso.puntaje(id);
+    h+=`<div class="opt shop"><b>${MINIJUEGOS[id]}<span>${p?'Mejor: '+p:'Nuevo'}</span></b><button class="pill" data-a="mini-${id}">▶ Jugar</button></div>`;
+  }
+  return h+'<button class="btn go" data-a="back">✔ Listo</button>';
+}
 function resultadoHTML(){
+  if(resultadoNivel.mini){
+    const r=resultadoNivel,id=r.mini;
+    return `<h1>${r.gano?'¡GANASTE!':'¡SE ACABÓ!'}</h1><p class="sub">${MINIJUEGOS[id]}</p>
+      <p class="stats">${r.lineas.join('<br>')}<br>Puntaje: <b>${r.puntos}</b> · Mejor: ${Progreso.puntaje(id)}<br>+${r.monedas} 🪙 al banco${r.nuevo?'<br><b style="color:#ffd23f">¡Nuevo récord!</b>':''}</p>
+      <button class="btn go" data-a="mini-${id}">⟲ Jugar otra vez</button>
+      <button class="btn" data-a="share-${id}">📤 Compartir récord</button><div id="sharebox"></div>
+      <button class="btn" data-a="minijuegos">🎮 Otros minijuegos</button>
+      <button class="btn" data-a="home">🏠 Menú principal</button>`;
+  }
   const r=resultadoNivel,n=r.nivel;
   return `<h1>¡NIVEL ${n} COMPLETADO!</h1><p class="estrellas grandes">${textoEstrellas(r.estrellas)}</p>
     <p class="stats">${r.lineas.join('<br>')}<br>⏱ ${fmtSeg(r.tiempo)} · +${r.monedas} 🪙 al banco${r.nuevo?'<br><b style="color:#ffd23f">¡Nuevo récord!</b>':''}</p>
@@ -98,25 +133,31 @@ function showOverlay(){
   if(view==='niveles'){card.innerHTML=nivelesHTML();return;}
   if(view==='tienda'){card.innerHTML=tiendaHTML();pintarTienda();return;}
   if(view==='records'){card.innerHTML=recordsHTML();return;}
+  if(view==='minijuegos'){card.innerHTML=minijuegosHTML();return;}
   const extras=`<button class="btn" data-a="fotos">📸 Fotos de personajes</button><button class="btn" data-a="cfg">⚙ Configuración</button>`;
   const photo=`<div class="face"><canvas id="prev" width="96" height="96" style="width:96px;height:96px"></canvas></div>
     <label class="btn" for="file">📷 Foto de tu cara<input type="file" accept="image/*" id="file"></label>
     <div class="msg" id="msg"></div>`;
   const hint=t=>`<p class="hint">Gira el celular en horizontal.<br>${t}</p>`;
   if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · ${TOTAL_NIVELES} niveles · 🪙 ${Progreso.banco}</p>${photo}
-    <button class="btn go" data-a="niveles">▶ Jugar</button>
+    <button class="btn go" data-a="niveles">▶ Historia</button>
+    <button class="btn go" data-a="minijuegos">🎮 Minijuegos</button>
     <button class="btn" data-a="tienda">🛒 Tienda</button>
     <button class="btn" data-a="records">🏆 Récords</button>${extras}`;
-  else if(state==='pause') card.innerHTML=`<h1>Pausa</h1><p class="sub">Nivel ${level} · ${NOMBRES_NIVEL[level]}</p>
+  else if(state==='pause') card.innerHTML=`<h1>Pausa</h1><p class="sub">${nombreDe(level)}</p>
     <button class="btn go" data-a="resume">▶ Continuar</button>
     <button class="btn" data-a="restart">⟲ Reiniciar nivel</button><button class="btn" data-a="home">🏠 Menú principal</button>${extras}${hint(ayudaNivel(level))}`;
   else if(state==='win') card.innerHTML=resultadoHTML();
-  else if(state==='over') card.innerHTML=`<h1>FIN DEL JUEGO</h1><p class="stats">Te quedaste sin vidas en ${NOMBRES_NIVEL[level]}.</p>
+  else if(state==='over') card.innerHTML=`<h1>FIN DEL JUEGO</h1><p class="stats">Te quedaste sin vidas en ${nombreDe(level)}.</p>
     <button class="btn go" data-a="play${level}">▶ Intentar de nuevo</button><button class="btn" data-a="home">🏠 Menú principal</button>`;
   drawPreview();
 }
-function pauseGame(){state='pause';showOverlay();}
-function startAudio(){try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();if(voiceData)decodeVoice();}if(ac.state==='suspended')ac.resume();}catch(_){}primeTTS();}
+function pauseGame(){state='pause';Musica.parar();showOverlay();}
+function startAudio(){
+  try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();if(voiceData)decodeVoice();Musica.reanudar();}
+      if(ac.state==='suspended')ac.resume();}catch(_){}
+  primeTTS();
+}
 function goFullscreen(){
   try{const el=document.documentElement;if(!document.fullscreenElement&&el.requestFullscreen){
     el.requestFullscreen().then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(_){}}).catch(()=>{});}}catch(_){}
@@ -126,9 +167,12 @@ overlay.addEventListener('click',e=>{
   const a=b.dataset.a;
   startAudio();
   if(a==='cfg'){view='cfg';showOverlay();return;}
-  if(a==='fotos'||a==='niveles'||a==='tienda'||a==='records'){view=a;showOverlay();return;}
+  if(a==='fotos'||a==='niveles'||a==='tienda'||a==='records'||a==='minijuegos'){view=a;if(state==='win')state='menu';showOverlay();return;}
+  if(a==='musica'){cfg.musica=!cfg.musica;saveCfg();Musica.volumen();showOverlay();return;}
+  if(a.startsWith('vol-')){cfg.volante=a.slice(4);saveCfg();showOverlay();return;}
+  if(a==='inclinv'){cfg.inclInv=!cfg.inclInv;saveCfg();showOverlay();return;}
   if(a.startsWith('buy-')||a.startsWith('eq-')){const m=accionTienda(a);showOverlay();const t=document.getElementById('tmsg');if(t)t.textContent=m;return;}
-  if(a.startsWith('share-')){compartirRecord(+a.slice(6));return;}
+  if(a.startsWith('share-')){const k=a.slice(6);compartirRecord(/^\d+$/.test(k)?+k:k);return;}
   if(a==='copytxt'){const box=document.getElementById('sharebox');try{navigator.clipboard.writeText(box.dataset.texto).then(()=>{b.textContent='✔ Copiado';}).catch(()=>{});}catch(_){}return;}
   if(a.startsWith('qf-')){Personajes.quitar(a.slice(3));showOverlay();return;}
   if(a.startsWith('mode-')){cfg.mode=a.slice(5);saveCfg();showOverlay();return;}
@@ -139,12 +183,17 @@ overlay.addEventListener('click',e=>{
   if(a==='delvoice'){voiceData=null;voiceBuf=null;try{localStorage.removeItem('tm_voice')}catch(_){}showOverlay();return;}
   if(a==='back'){view='';showOverlay();return;}
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}
-  if(a==='home'){state='menu';view='';startLevel(1);showOverlay();return;}
+  if(a==='home'){state='menu';view='';startLevel(1);Musica.tocar('menu');showOverlay();return;}
   goFullscreen();
   if(/^play\d$/.test(a)){view='';startLevel(+a.slice(4));}
+  else if(a.startsWith('mini-')){view='';startLevel(a.slice(5));}
   else if(a==='restart')startLevel(level);
   for(const k in input)input[k]=false;
   state='play';overlay.style.display='none';pauseBtn.style.display='block';
+  Musica.tocar(CANCION[level]);
+});
+overlay.addEventListener('input',e=>{
+  if(e.target.id==='vol'){cfg.volumen=+e.target.value;saveCfg();Musica.volumen();}
 });
 overlay.addEventListener('change',e=>{
   if(e.target.dataset&&e.target.dataset.foto&&e.target.files[0]){

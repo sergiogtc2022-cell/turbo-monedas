@@ -43,12 +43,12 @@ const Nivel4=(()=>{
   function herida(){
     if(P.inv>0)return;
     golpes++;lives--;sfx.hurt();bubble=100;say();
-    if(lives<=0){state='over';showOverlay();return;}
+    if(lives<=0){state='over';Musica.parar();Musica.jingle('perder');showOverlay();return;}
     P.inv=100;P.vy=-7;P.vx=-P.face*5;
   }
   function caer(){
     golpes++;lives--;sfx.hurt();
-    if(lives<=0){state='over';showOverlay();return;}
+    if(lives<=0){state='over';Musica.parar();Musica.jingle('perder');showOverlay();return;}
     P=nuevaKiara(checkpoint);P.inv=90;cam=Math.max(0,P.x-(W/scale)*0.38);
   }
   function huesoMasCercano(){
@@ -72,11 +72,11 @@ const Nivel4=(()=>{
       return;
     }
     if(input.jp){P.jumpBuf=8;input.jp=false;}
-    const dir=(input.r?1:0)-(input.l?1:0), acc=P.onGround?0.55:0.35;
+    const dir=(input.r?1:0)-(input.l?1:0), acc=P.onGround?0.38:0.26;
     if(dir){P.vx+=dir*acc;P.face=dir;} else if(P.onGround){P.vx*=0.82;if(Math.abs(P.vx)<0.1)P.vx=0;} else P.vx*=0.985;
-    P.vx=Math.max(-7.2,Math.min(7.2,P.vx));
+    P.vx=Math.max(-5.2,Math.min(5.2,P.vx));
     P.coyote=P.onGround?6:P.coyote-1;
-    if(P.jumpBuf>0){P.jumpBuf--;if(P.coyote>0){P.vy=-11;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
+    if(P.jumpBuf>0){P.jumpBuf--;if(P.coyote>0){P.vy=-10.8;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
     if(P.jumping&&!input.j&&P.vy<-4)P.vy=-4;
     P.vy=Math.min(P.vy+0.6,14);
     moveX(P);moveY(P);
@@ -99,7 +99,7 @@ const Nivel4=(()=>{
     if(P.onGround&&Math.abs(P.vx)<1&&grid[rr2]&&grid[rr2][cc]==='X'){
       if(++digT%8===0)parts.push({x:P.x+P.w/2,y:P.y+P.h,vx:(Math.random()-.5)*4,vy:-3-Math.random()*2,life:25,color:'#8d5a2b',g:0.3,r:3});
       if(digT>=40){
-        grid[rr2][cc]='#';digT=0;huesos++;sfx.item();
+        grid[rr2][cc]='#';digT=0;huesos++;sfx.item();Musica.jingle('acierto');
         parts.push({x:cc*T+16,y:rr2*T-10,vx:0,vy:-6,life:35,color:'#fff8e1',g:0.3,r:7});
         kiaraMsg={texto:huesos>=HUESOS?'¡Todos los huesos! Ve con tu dueño':`🦴 ${huesos} de ${HUESOS}`,t:110};
       }
@@ -135,7 +135,7 @@ const Nivel4=(()=>{
 
     if(P.y>ROWS*T+40){caer();if(state!=='play')return;}
     if(P.x+P.w/2>flagCol*T-24){
-      if(huesos>=HUESOS){winT=90;sfx.win();P.vx=0;return;}
+      if(huesos>=HUESOS){winT=90;Musica.parar();Musica.jingle('victoria');P.vx=0;return;}
       if(faltanT===0){kiaraMsg={texto:`Te faltan ${HUESOS-huesos} huesos 🦴 (usa 👃 para olfatear)`,t:150};faltanT=200;}
       P.x=flagCol*T-24-P.w/2;P.vx=Math.min(P.vx,0);
     }

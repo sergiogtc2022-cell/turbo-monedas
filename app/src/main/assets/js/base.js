@@ -9,7 +9,7 @@ addEventListener('resize',resize);resize();
 
 // ---------- Estado ----------
 // ---------- Configuración ----------
-let cfg={swap:false,voice:true,mode:'touch',car:'sedan'};
+let cfg={swap:false,voice:true,mode:'touch',car:'sedan',musica:true,volumen:0.7,volante:'dedo',inclInv:false};
 try{const c=JSON.parse(localStorage.getItem('tm_cfg')||'null');if(c)cfg=Object.assign(cfg,c);}catch(_){}
 function saveCfg(){try{localStorage.setItem('tm_cfg',JSON.stringify(cfg))}catch(_){}applyCfg();}
 function applyCfg(){document.body.classList.toggle('swap',cfg.swap);document.body.classList.toggle('nobtn',cfg.mode!=='buttons');}
@@ -76,7 +76,7 @@ const sfx={
 };
 
 // ---------- Entrada ----------
-const input={l:false,r:false,j:false,jp:false,d:false,swipe:null,a1:false,a2:false};
+const input={l:false,r:false,j:false,jp:false,d:false,swipe:null,a1:false,a2:false,pu:false,pd:false,pl:false,pr:false,volante:null,inclinacion:0};
 function setKey(k,v){if(k==='j'&&v&&!input.j)input.jp=true;input[k]=v;}
 const keyMap={ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r',Space:'j',ArrowUp:'j',KeyW:'j',KeyZ:'j',ArrowDown:'d',KeyS:'d',KeyX:'a1',KeyC:'a2'};
 addEventListener('keydown',e=>{const k=keyMap[e.code];if(k){e.preventDefault();if(!e.repeat)setKey(k,true)} if(e.code==='Escape'&&state==='play')pauseGame();});
@@ -86,35 +86,44 @@ function bind(id,k){const el=document.getElementById(id);
   ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>el.addEventListener(ev,()=>{el.classList.remove('on');setKey(k,false)}));
 }
 bind('bL','l');bind('bR','r');bind('bJ','j');bind('bOlfa','a1');bind('bLadra','a2');
+bind('pU','pu');bind('pD','pd');bind('pL','pl');bind('pR','pr');
 document.addEventListener('contextmenu',e=>e.preventDefault());
 
 // Control táctil
-//  Nivel 1: un lado se desliza para moverse, el otro se toca para saltar ("auto-correr": tocar en cualquier parte salta).
-//  Nivel 2: mantener el lado izquierdo gira a la izquierda, el derecho a la derecha; deslizar hacia arriba da un brinco.
+//  Plataformas (niveles 1, 4 y 5): un lado se desliza para moverse y el otro se toca para saltar.
+//  Nivel 2: arrastrar el dedo es el volante (más lejos = gira más); deslizar hacia arriba da un brinco.
+//  Nivel 3: deslizar gira la viborita (además de la cruz direccional).
+//  Minijuegos: reciben los toques directamente en su función "toque".
 const touches=new Map();
+const nivelActual=()=>typeof NIVELES!=='undefined'?NIVELES[level]:null;
 function updTouchInput(){
-  let l=false,r=false,j=false;
+  let l=false,r=false,j=false,volante=null;
   for(const t of touches.values()){
     if(t.role==='move'){if(t.dx>14)r=true;else if(t.dx<-14)l=true;if(t.swipe)j=true;}
-    else if(t.role==='kl'){l=true;if(t.swipe)j=true;}
-    else if(t.role==='kr'){r=true;if(t.swipe)j=true;}
+    else if(t.role==='volante'){volante=Math.max(-1,Math.min(1,(t.cx-t.sx)/70));if(t.swipe)j=true;}
     else if(t.role==='swipe'){}
     else j=true;
   }
-  input.l=l;input.r=r;if(j&&!input.j)input.jp=true;input.j=j;
+  input.l=l;input.r=r;input.volante=volante;if(j&&!input.j)input.jp=true;input.j=j;
 }
 cv.addEventListener('pointerdown',e=>{
-  if(state!=='play'||cfg.mode==='buttons')return;
+  if(state!=='play')return;
+  const nv=nivelActual();
+  if(nv&&nv.toque){e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}nv.toque('down',e.clientX,e.clientY,e.pointerId);return;}
+  if(cfg.mode==='buttons'&&level!==3)return;
   e.preventDefault();try{cv.setPointerCapture(e.pointerId)}catch(_){}
   let role='jump';
-  if(level===2)role=e.clientX<W*0.5?'kl':'kr';
+  if(level===2)role='volante';
   else if(level===3)role='swipe';
-  else if(cfg.mode==='touch'||level>=4){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
-  touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,sx:e.clientX,dx:0,swipe:false,usado:false});
+  else if(cfg.mode==='touch'||level!==1){const left=e.clientX<W*0.5;role=(left!==cfg.swap)?'move':'jump';}
+  touches.set(e.pointerId,{role,x0:e.clientX,y0:e.clientY,sx:e.clientX,cx:e.clientX,dx:0,swipe:false,usado:false});
   updTouchInput();
 });
 cv.addEventListener('pointermove',e=>{
+  const nv=nivelActual();
+  if(state==='play'&&nv&&nv.toque){nv.toque('move',e.clientX,e.clientY,e.pointerId);return;}
   const t=touches.get(e.pointerId);if(!t)return;
+  t.cx=e.clientX;
   t.dx=e.clientX-t.x0;
   if(t.dx>70){t.x0=e.clientX-70;t.dx=70;} if(t.dx<-70){t.x0=e.clientX+70;t.dx=-70;}
   if(t.role==='swipe'){                                  // nivel 3: un deslizamiento = un giro
@@ -122,13 +131,23 @@ cv.addEventListener('pointermove',e=>{
     if(!t.usado&&Math.hypot(dx,dy)>28){t.usado=true;input.swipe=Math.abs(dx)>Math.abs(dy)?(dx>0?'r':'l'):(dy>0?'d':'u');}
     return;
   }
-  if(t.role!=='jump'&&t.y0-e.clientY>45)t.swipe=true;   // deslizar hacia arriba también salta
+  if(t.role==='volante'){if(t.y0-e.clientY>45&&Math.abs(e.clientX-t.sx)<45)t.swipe=true;}
+  else if(t.role!=='jump'&&t.y0-e.clientY>45)t.swipe=true;   // deslizar hacia arriba también salta
   updTouchInput();
 });
 ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>cv.addEventListener(ev,e=>{
+  const nv=nivelActual();
+  if(nv&&nv.toque&&ev!=='lostpointercapture'){nv.toque('up',e.clientX,e.clientY,e.pointerId);}
   if(touches.delete(e.pointerId))updTouchInput();
 }));
-function clearTouches(){touches.clear();for(const k in input)input[k]=k==='swipe'?null:false;}
+// Inclinar el celular como volante (opción del nivel 2)
+addEventListener('devicemotion',e=>{
+  const g=e.accelerationIncludingGravity;if(!g||g.y==null)return;
+  const ang=(screen.orientation&&screen.orientation.angle)||window.orientation||0;
+  const v=ang===90?g.y:(ang===270||ang===-90)?-g.y:g.x;
+  input.inclinacion=Math.max(-1,Math.min(1,v/5))*(cfg.inclInv?-1:1);
+});
+function clearTouches(){touches.clear();for(const k in input)input[k]=k==='swipe'||k==='volante'?null:k==='inclinacion'?input.inclinacion:false;}
 
 // ---------- Dibujo ----------
 function drawDefaultFace(ctx,x,y,r,face){
