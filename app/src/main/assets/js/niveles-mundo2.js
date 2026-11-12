@@ -159,10 +159,45 @@ function mapaRatones(){
   m.cerrar();
 }
 
+// 3-4 · El jardín gigante: el chile te hace gigante (rompe muros de piedra y aplasta enemigos) y la paleta te hace mini
+// (pasas entre los barrotes de las rejas). Sus bloques se pueden usar varias veces y duran 10 s.
+function mapaJardin(){
+  const m=piezasExtra(mapaPixel(280));
+  m.suelo(0,279);
+  const muro=(c,alto,ancho=2)=>{for(let i=0;i<ancho;i++)for(let k=1;k<=alto;k++)m.set(c+i,G-k,'K');};
+  const reja=c=>{for(let r=0;r<G;r++)m.set(c,r,'R');};
+  // gigante
+  m.monedas(4,G-1,4);m.bloques(9,7,'BGB');m.monedas(9,6,3);
+  muro(18,6);m.monedas(21,G-1,5);m.enemigo(24);m.enemigo(26);m.enemigo(28);
+  // mini
+  m.bloques(34,7,'BNB');reja(42);m.monedas(43,G-1,4);m.monedas(43,8,4);m.enemigo(48);
+  m.hueco(52,54);m.arco(51,7,5,2);
+  m.control(58);
+  // gigante: muro alto y techo de ladrillo que se rompe al crecer
+  m.bloques(62,7,'G');m.techo(66,74,2,7);m.monedas(66,G-1,9);muro(76,7,3);m.enemigo(82);m.enemigo(84);
+  m.bloques(88,7,'QHQ');
+  // mini: doble reja con enemigos entre ellas
+  m.bloques(96,7,'N');reja(102);m.monedas(103,G-1,3);m.enemigo(105);reja(108);m.monedas(109,G-1,4);
+  m.hueco(116,118);m.arco(115,7,5,2);
+  m.control(124);
+  // los dos poderes seguidos: gigante para el muro, luego mini para la reja
+  m.bloques(130,7,'BGB');muro(138,6);m.enemigo(142);m.bloques(144,7,'BNB');reja(151);m.monedas(152,G-1,6);
+  m.escalera(162,3);m.hueco(165,168);m.bajada(169,3);
+  m.bloques(176,7,'QVQ');m.enemigo(182);m.enemigo(186);
+  m.control(190);
+  // final: pirámide de piedra que solo un gigante atraviesa y reja final
+  m.bloques(196,7,'G');for(let i=0;i<6;i++)muro(202+i,6-Math.abs(3-i)+1,1);m.monedas(210,G-1,5);
+  m.bloques(214,7,'N');reja(222);m.monedas(223,8,3);
+  m.enemigo(230);m.enemigo(236);m.bloques(240,7,'BQBHB');m.escalera(250,5);
+  m.meta(266);
+  m.cerrar();
+}
+
 const Nivel2_1=crearNivelPixel({clave:'px5',titulo:'NIVEL 2-1',tema:'torre',construir:mapaTorre,filas:60,mec:{lavaSube:0.28,margen:320}});
 const Nivel2_2=crearNivelPixel({clave:'px6',titulo:'NIVEL 2-2',tema:'cielo',construir:mapaCielo,mec:{viento:-0.035}});
 const Nivel2_3=crearNivelPixel({clave:'px7',titulo:'NIVEL 2-3',tema:'castillo',construir:mapaCastillo,mec:{}});
 const Nivel2_4=crearNivelPixel({clave:'px8',titulo:'NIVEL 2-4',tema:'mina',construir:mapaMina,mec:{carrito:3.6}});
 const Nivel3_1=crearNivelPixel({clave:'px9',titulo:'NIVEL 3-1',tema:'agua',construir:mapaAgua,mec:{agua:true}});
 const Nivel3_2=crearNivelPixel({clave:'px10',titulo:'NIVEL 3-2',tema:'atardecer',construir:mapaAtardecer,mec:{auto:1.2}});
+const Nivel3_4=crearNivelPixel({clave:'px12',titulo:'NIVEL 3-4',tema:'jardin',construir:mapaJardin,mec:{}});
 const Nivel3_3=crearNivelPixel({clave:'px11',titulo:'NIVEL 3-3',tema:'ratones',construir:mapaRatones,mec:{puertasOn:true}});

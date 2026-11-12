@@ -57,9 +57,11 @@ function buildLevel(){
 
   totalCoins=0; for(const row of grid)for(const ch of row)if(ch==='o')totalCoins++;
 }
-const isSolid=ch=>!!ch&&ch!==' '&&'#BS>KQHUXMmV'.includes(ch);   // X: hueso enterrado (nivel 4), M: bloque de maceta (nivel 5), V: "?" con el gorro con hélice
+const isSolid=ch=>!!ch&&ch!==' '&&'#BS>KQHUXMmVGNR'.includes(ch);   // G/N: "?" que te hace gigante/mini (se pueden usar varias veces), R: reja (solo pasa el personaje mini)   // X: hueso enterrado (nivel 4), M: bloque de maceta (nivel 5), V: "?" con el gorro con hélice
 // Piezas que no son sólidas: '=' plataforma que solo se pisa desde arriba, 'L' lava, 'D' puerta que te lleva a su pareja
 function solid(c,r){ if(c<0)return true; if(c>=COLS||r<0||r>=ROWS)return false; return isSolid(grid[r][c]); }
+// Para quien se mueve: el personaje mini pasa entre los barrotes de las rejas
+const solidPara=(e,c,r)=>e===P&&P.mini>0&&grid[r]&&grid[r][c]==='R'?false:solid(c,r);
 
 function newPlayer(col){return {x:col*T+4,y:G*T-31,w:22,h:30,vx:0,vy:0,face:1,onGround:false,inv:0,boost:0,coyote:0,jumpBuf:0,jumping:false,anim:0,under:'',llama:0,golpeT:0};}
 let items=[], bumps={}, winT=0;
@@ -79,6 +81,13 @@ function golpeDuro(){
 function golpeBloque(c,r){
   if(bloqueEspecial&&bloqueEspecial(c,r))return;
   const ch=grid[r][c], cxp=c*T+16;
+  if(P.gigante>0&&'BKU'.includes(ch)){romperGigante(c,r);return;}
+  if(ch==='G'||ch==='N'){            // bloques de tamaño: no se gastan, sueltan su poder cada vez (con pausa)
+    if(bumps[c+','+r])return;
+    bumps[c+','+r]=8;sfx.item();
+    items.push({t:ch==='G'?'grande':'mini',x:c*T+4,y:r*T,w:24,h:16,vx:0,vy:0,dir:1,sale:16});
+    return;
+  }
   for(const e of enemies)if(e.alive&&Math.abs(e.x+e.w/2-cxp)<24&&Math.abs(e.y+e.h-r*T)<6)ahuyentar(e,e.x+e.w/2>cxp?1:-1);
   if(r>0&&grid[r-1][c]==='o'){grid[r-1][c]=' ';coins++;sfx.coin();sparkle(cxp,r*T-16);}
   if(ch==='B'){
@@ -105,11 +114,47 @@ function actualizarItems(){
     it.vx=1.8*it.dir;it.vy=Math.min(it.vy+0.5,12);
     moveX(it);if(it.hitWall)it.dir=-it.dir;
     moveY(it);
-    if(aabb(P,it)){it.fuera=true;if(it.t==='gorro')ponerGorro();else activarKiara();}
+    if(aabb(P,it)){it.fuera=true;if(it.t==='gorro')ponerGorro();else if(it.t==='grande'||it.t==='mini')cambiarTam(it.t);else activarKiara();}
     if(it.y>ROWS*T+40)it.fuera=true;
   }
   items=items.filter(it=>!it.fuera);
   for(const k in bumps)if(--bumps[k]<=0)delete bumps[k];
+}
+// ---------- Gigante y mini (10 s) ----------
+const TAM={normal:[22,30],grande:[44,60],mini:[12,15]};
+function cabe(x,y,w,h,conRejas){
+  const c0=Math.floor(x/T),c1=Math.floor((x+w-0.01)/T),r0=Math.floor(y/T),r1=Math.floor((y+h-0.01)/T);
+  for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(conRejas?solid(c,r):solidPara(P,c,r))return false;
+  return true;
+}
+function ponerTam(tipo){
+  const [w,h]=TAM[tipo],pie=P.y+P.h,mid=P.x+P.w/2;
+  P.w=w;P.h=h;P.x=mid-w/2;P.y=pie-h;
+}
+function cambiarTam(tipo){
+  bajarDeKiara();
+  P.gigante=0;P.mini=0;
+  if(tipo==='grande'){P.gigante=600;ponerTam('grande');
+    // al crecer rompe lo que estorbe alrededor
+    const c0=Math.floor(P.x/T),c1=Math.floor((P.x+P.w)/T),r0=Math.floor(P.y/T),r1=Math.floor((P.y+P.h-1)/T);
+    for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++)if(grid[r]&&'BKU'.includes(grid[r][c]))romperGigante(c,r);
+    Musica.jingle('gigante');
+  } else {P.mini=600;ponerTam('mini');Musica.jingle('mareo');}
+  sparkle(P.x+P.w/2,P.y+P.h/2,tipo==='grande'?'#ff7043':'#4fc3f7',16);
+}
+function actualizarTam(){
+  for(const k of ['gigante','mini']){
+    if(!(P[k]>0))continue;
+    if(P[k]>1){P[k]--;continue;}
+    // volver al tamaño normal solo si hay espacio (si estás bajo una reja, espera)
+    const [w,h]=TAM.normal,x=P.x+P.w/2-w/2,y=P.y+P.h-h;
+    if(cabe(x,y,w,h,true)){P[k]=0;ponerTam('normal');sfx.boost();}
+  }
+}
+function romperGigante(c,r){
+  grid[r][c]=' ';sfx.romper();
+  const col=PixelArt&&modoPixel?'#9e9e9e':'#e07b39';
+  for(let i=0;i<4;i++)parts.push({x:c*T+8+(i%2)*16,y:r*T+8+(i>1?16:0),vx:(i%2?1:-1)*(1.5+Math.random()*2),vy:-6+(i>1?2:0),life:45,color:col,g:0.4,r:5});
 }
 // Gorro con hélice: 15 s; manteniendo el salto en el aire sube un poco (gasta impulso) y luego planea
 function ponerGorro(){P.helice=900;P.combust=80;Musica.jingle('poder');sparkle(P.x+11,P.y,'#90caf9',12);}
@@ -127,20 +172,21 @@ function volarConGorro(){
 function moveX(e){
   e.x+=e.vx; e.hitWall=false;
   const r0=Math.floor(e.y/T), r1=Math.floor((e.y+e.h-0.01)/T);
-  if(e.vx>0){const c=Math.floor((e.x+e.w)/T);for(let r=r0;r<=r1;r++)if(solid(c,r)){e.x=c*T-e.w-0.01;e.vx=0;e.hitWall=true;break}}
-  else if(e.vx<0){const c=Math.floor(e.x/T);for(let r=r0;r<=r1;r++)if(solid(c,r)){e.x=(c+1)*T+0.01;e.vx=0;e.hitWall=true;break}}
+  if(e.vx>0){const c=Math.floor((e.x+e.w)/T);for(let r=r0;r<=r1;r++)if(solidPara(e,c,r)){e.x=c*T-e.w-0.01;e.vx=0;e.hitWall=true;break}}
+  else if(e.vx<0){const c=Math.floor(e.x/T);for(let r=r0;r<=r1;r++)if(solidPara(e,c,r)){e.x=(c+1)*T+0.01;e.vx=0;e.hitWall=true;break}}
 }
 function moveY(e){
   e.y+=e.vy; e.onGround=false;
   const c0=Math.floor(e.x/T), c1=Math.floor((e.x+e.w-0.01)/T);
   if(e.vy>0){const r=Math.floor((e.y+e.h)/T);let hit=false,under='#';
-    for(let c=c0;c<=c1;c++)if(solid(c,r)){hit=true;const ch=grid[r]&&grid[r][c];if(ch==='S')under='S';else if(ch==='>'&&under!=='S')under='>';}
+    for(let c=c0;c<=c1;c++)if(solidPara(e,c,r)){hit=true;const ch=grid[r]&&grid[r][c];if(ch==='S')under='S';else if(ch==='>'&&under!=='S')under='>';}
       else if(grid[r]&&grid[r][c]==='='&&e.y+e.h-e.vy<=r*T+0.5)hit=true;   // se pisa desde arriba, se atraviesa desde abajo
     if(hit){e.y=r*T-e.h;e.vy=0;e.onGround=true;e.under=under;}}
   else if(e.vy<0){
     const r=Math.floor(e.y/T), mid=e.x+e.w/2;let hitC=-1;
-    for(let c=c0;c<=c1;c++)if(solid(c,r)&&(hitC<0||Math.abs(c*T+16-mid)<Math.abs(hitC*T+16-mid)))hitC=c;
-    if(hitC>=0){e.y=(r+1)*T;e.vy=0;if(e===P&&r>=0)golpeBloque(hitC,r);}
+    for(let c=c0;c<=c1;c++)if(solidPara(e,c,r)&&(hitC<0||Math.abs(c*T+16-mid)<Math.abs(hitC*T+16-mid)))hitC=c;
+    if(hitC>=0){e.y=(r+1)*T;e.vy=0;if(e===P&&r>=0){golpeBloque(hitC,r);
+      if(P.gigante>0)for(let c=c0;c<=c1;c++)if(c!==hitC&&grid[r]&&'BKU'.includes(grid[r][c]))romperGigante(c,r);}}
   }
 }
 const aabb=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
@@ -148,7 +194,7 @@ const aabb=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
 // ---------- Lógica ----------
 function sparkle(x,y,color='#fff59d',n=6){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=1+Math.random()*2.5;parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life:25,color,g:.05,r:3})}}
 function hurt(src){
-  if(P.inv>0||kiaraMontada())return;
+  if(P.inv>0||kiaraMontada()||P.gigante>0)return;
   P.golpeT=30;
   if(src==='enemy'){bubble=100;say();}
   if(coins>0){
@@ -206,7 +252,7 @@ function fisicaP3(dir,montada){
   if(Math.abs(P.vx)>max+0.3&&!suelo)P.vx*=0.995;
   P.coyote=suelo?6:P.coyote-1;
   if(P.jumpBuf>0){P.jumpBuf--;
-    if(P.coyote>0){P.vy=(montada?-10:-8.6)-Math.abs(P.vx)*0.25;P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
+    if(P.coyote>0){P.vy=((montada?-10.6:-9.4)-Math.abs(P.vx)*0.25)*(P.mini>0?1.1:1);P.jumping=true;P.coyote=0;P.jumpBuf=0;P.onGround=false;sfx.jump();}}
   const g=P.vy<0?(P.resorte?0.55:(P.jumping&&input.j?0.36:1.0)):0.6;
   P.vy=Math.min(P.vy+g,8.5);
 }
@@ -246,6 +292,10 @@ function step(){
   const vxAntes=P.vx,pie=P.y+P.h;
   moveX(P); moveY(P);
   if(plats.length)pisarPlats(pie);
+  if(P.gigante>0&&P.hitWall){const c=Math.floor((P.face>0?P.x+P.w+2:P.x-2)/T),r0=Math.floor(P.y/T),r1=Math.floor((P.y+P.h-1)/T);
+    for(let r=r0;r<=r1;r++)if(grid[r]&&'BKU'.includes(grid[r][c]))romperGigante(c,r);
+    for(let r=r0-1;r>=0&&'BKU'.includes(grid[r][c]);r--)romperGigante(c,r);}   // también lo que queda arriba, para no dejar bloques flotando
+  if(P.gigante>0||P.mini>0)actualizarTam();
   // chocar de frente contra una pared
   if(P.hitWall&&Math.abs(vxAntes)>2.6&&frames-(P.ultChoque||-999)>180&&!(mec&&mec.carrito)){P.ultChoque=frames;Voces.decir('choque');}
   if(P.onGround){P.jumping=false;P.resorte=false;
@@ -268,7 +318,7 @@ function step(){
     if(r<0||r>=ROWS||c<0||c>=COLS)continue;
     const ch=grid[r][c];
     if(ch==='o'){grid[r][c]=' ';coins++;sfx.coin();sparkle(c*T+16,r*T+16);}
-    else if(ch==='^'){if(!montada&&aabb(P,{x:c*T+4,y:r*T+12,w:T-8,h:T-12}))hurt();}
+    else if(ch==='^'){if(!montada&&!(P.gigante>0)&&aabb(P,{x:c*T+4,y:r*T+12,w:T-8,h:T-12}))hurt();}
     else if(ch==='C'){grid[r][c]='c';checkpoint=c;checkpointY=(r+1)*T-31;sfx.check();sparkle(c*T+16,r*T,'#7CFC00',12);}
     else if(ch==='L'&&!quemado&&aabb(P,{x:c*T+2,y:r*T+12,w:T-4,h:T-12}))quemado=true;
   }
@@ -300,7 +350,7 @@ function step(){
     if(e.inv>0){e.inv--;continue;}
     if(e.y>ROWS*T+100){e.alive=false;e.dead=99;}
     if(e.alive&&aabb(P,e)){
-      const pisado=P.vy>1&&P.y+P.h-e.y<18&&e.t!=='pez';
+      const pisado=(P.vy>1&&P.y+P.h-e.y<18&&e.t!=='pez')||(P.gigante>0&&e.t!=='jefe');
       if(e.hp>1&&(pisado||P.boost>0||e.paralizado>0)){   // jefe: aguanta varios pisotones
         e.hp--;e.inv=70;e.paralizado=0;e.vx=(e.vx<0?-1:1)*Math.min(3,Math.abs(e.vx)*1.35);P.vy=-9;sfx.stomp();sfx.aturdido();sparkle(e.x+e.w/2,e.y,'#ffeb3b',16);
       } else if(pisado||P.boost>0||e.paralizado>0){
@@ -314,7 +364,8 @@ function step(){
   enemies=enemies.filter(e=>e.alive||e.dead<(e.huye?90:30));
 
   if(P.y>ROWS*T+40){Voces.decir('vacio');die();if(state!=='play')return;}
-  if(P.x+P.w/2>flagCol*T+14&&(flagFila==null||P.y<(flagFila+1)*T+4)){bajarDeKiara();winT=150;P.vx=0;P.helice=0;P.quieto=0;Musica.parar();Musica.jingle('victoria');return;}
+  if(P.x+P.w/2>flagCol*T+14&&(flagFila==null||P.y<(flagFila+1)*T+4)){bajarDeKiara();winT=150;P.vx=0;P.helice=0;P.quieto=0;
+    if(P.gigante>0||P.mini>0){P.gigante=0;P.mini=0;ponerTam('normal');}Musica.parar();Musica.jingle('victoria');return;}
 
   if(mec&&mec.auto){                       // la pantalla avanza sola: si te alcanza contra una pared, pierdes
     cam=Math.min(cam+mec.auto,COLS*T-vw);

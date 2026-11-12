@@ -86,6 +86,7 @@ function ayudaNivel(n){
     px8:`${ctlPlat} La mina: el carrito avanza solo; tú solo saltas huecos, picos y enemigos.`,
     px9:`${ctlPlat} Bajo el agua: cada toque de salto es una brazada. Esquiva a los peces.`,
     px10:`${ctlPlat} Carrera al atardecer: la pantalla avanza sola. Si te atrapa contra una pared pierdes una vida.`,
+    px12:`${ctlPlat} El jardín gigante: el chile 🌶 te hace gigante 10 s (rompe muros de piedra y aplasta enemigos) y la paleta 🍭 te hace mini (pasas entre las rejas). Sus bloques se pueden usar varias veces.`,
     px11:`${ctlPlat} Casa de los ratones: cada cuarto está cerrado; camina hacia la puerta para pasar al siguiente.`,
     2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
     3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
@@ -107,9 +108,9 @@ function ayudaNivel(n){
 // Colores de la miniatura de cada nivel (cielo y suelo) para la rejilla del selector
 const MINIATURA={'1px':['#62a8ff','#2fa82f'],px2:['#ffb36b','#e0b060'],px3:['#221c3d','#4b4b6b'],px4:['#a8d8ff','#ffffff'],
   px5:['#14275a','#8e8e9e'],px6:['#7cc4ff','#ffffff'],px7:['#260f0f','#b71c1c'],px8:['#261a12','#8d6e63'],
-  px9:['#0a5fa3','#f0d9a0'],px10:['#c0587e','#4a1a38'],px11:['#f3e5ab','#c68642'],
+  px9:['#0a5fa3','#f0d9a0'],px10:['#c0587e','#4a1a38'],px11:['#f3e5ab','#c68642'],px12:['#8fd3ff','#7cc85a'],
   1:['#3d9bff','#5fb55c'],2:['#555','#9e9e9e'],3:['#1b5e20','#8bc34a'],4:['#81d4fa','#a1887f'],5:['#4a148c','#212121']};
-const ICONO_NIVEL={'1px':'🌳',px2:'🏜',px3:'💎',px4:'❄',px5:'🗼',px6:'☁',px7:'🏰',px8:'⛏',px9:'🐟',px10:'🌅',px11:'🐭',1:'🧱',2:'🏎',3:'🐍',4:'🐶',5:'🧟'};
+const ICONO_NIVEL={'1px':'🌳',px2:'🏜',px3:'💎',px4:'❄',px5:'🗼',px6:'☁',px7:'🏰',px8:'⛏',px9:'🐟',px10:'🌅',px11:'🐭',px12:'🌶',1:'🧱',2:'🏎',3:'🐍',4:'🐶',5:'🧟'};
 function nivelesHTML(){
   let h='<h1>Niveles</h1>';
   for(const m of MUNDOS){

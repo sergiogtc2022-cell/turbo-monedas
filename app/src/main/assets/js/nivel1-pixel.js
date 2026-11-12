@@ -23,6 +23,7 @@ const TEMAS_PIXEL={
     colores:{g:'#f0d9a0',G:'#fff0c8',d:'#d8b878',D:'#b08a50',b:'#ff8a65',B:'#ffccbc',m:'#8a3a20',p:'#ff7043',P:'#5a1a0a'}},
   atardecer:{cielo:['#5b3a8c','#c0587e','#ff8a5c','#ffc070'],sol:'#fff0a0',colinas:[['#7a3d6e','#3a1a3a'],['#a0506a','#4a2040']],
     colores:{g:'#c0587e',G:'#ff8aa0',d:'#6a3050',D:'#4a1a38',p:'#ff7043',P:'#5a1a0a'}},
+  jardin:{cielo:['#8fd3ff','#b8e6ff'],nubes:true,flores:true,colinas:[['#7cc85a','#2e7d32'],['#a5e070','#3f8f2a']],colores:{}},
   ratones:{cielo:['#f3e5ab'],casa:true,tabla:['#8d5524','#c68642','#3e2008'],puerta:'#a1663a',plat:['#8d5524','#c68642'],
     colores:{g:'#c68642',G:'#e0a868',d:'#8d5524',D:'#6d3d14',b:'#b5651d',B:'#e09050',m:'#4a2408',s:'#a1887f',S:'#6d4c41',L:'#d7ccc8'}}
 };
@@ -73,6 +74,8 @@ function crearNivelPixel(opc){
       if(ch==='#'&&tema.rieles&&!arriba)rieles(x,y);
       return;}
     if(ch==='='){tabla(x,y);return;}
+    if(ch==='R'){reja(x,y);return;}
+    if(ch==='G'||ch==='N'){lx.drawImage(PixelArt.tiles.Q(),x,y);lx.fillStyle=ch==='G'?'#e53935':'#29b6f6';lx.fillRect(x+2,y+11,3,3);lx.fillRect(x+11,y+11,3,3);return;}
     if(ch==='L'){lava(x,y,c);return;}
     if(ch==='D'){puerta(x,y);return;}
     if(ch==='^'){for(let i=0;i<2;i++){const bx=x+i*8;for(let k=0;k<7;k++){lx.fillStyle='#151515';lx.fillRect(bx+3-Math.floor(k/2)-0,y+9+k,Math.floor(k/2)*2+2,1);
@@ -107,7 +110,8 @@ function crearNivelPixel(opc){
     if(flagCol>=c0-2&&flagCol<=c1+2)meta(camL);
     for(const pl of plats)plataforma(pl,camL);
     for(const b of barras)barraFuego(b,camL);
-    for(const it of items){if(it.t==='gorro')PixelArt.gorroItem(lx,Math.round(it.x/2)-camL,Math.round(it.y/2));else PixelArt.hueso(lx,Math.round(it.x/2)-camL,Math.round(it.y/2));}
+    for(const it of items){const ix=Math.round(it.x/2)-camL,iy=Math.round(it.y/2);
+      if(it.t==='gorro')PixelArt.gorroItem(lx,ix,iy);else if(it.t==='grande')PixelArt.chile(lx,ix,iy);else if(it.t==='mini')PixelArt.paleta(lx,ix,iy);else PixelArt.hueso(lx,ix,iy);}
     for(const e of enemies){if(e.x>cam-80&&e.x<cam+vw+80&&(e.alive||e.huye)){if(e.inv>0&&Math.floor(e.inv/4)%2)continue;PixelArt.enemigo(lx,e,Math.round((e.x+e.w/2)/2)-camL,Math.round((e.y+e.h)/2));
       if(e.paralizado>0){lx.fillStyle='#ffeb3b';for(let i=0;i<3;i++){const a=frames*0.12+i*2.1;lx.fillRect(Math.round((e.x+13)/2-camL+Math.cos(a)*6),Math.round((e.y)/2-6+Math.sin(a)*2),2,2);}}}
       else if(!e.alive&&e.dead<30&&e.x>cam-40&&e.x<cam+vw+40){lx.fillStyle='#3a1d4d';lx.fillRect(Math.round((e.x+3)/2)-camL,Math.round((e.y+e.h)/2)-3,12,3);}}
@@ -124,8 +128,9 @@ function crearNivelPixel(opc){
     if(!(P.inv>0&&Math.floor(P.inv/4)%2)){
       if(kiaraMontada()){PixelArt.kiara(lx,poseKiara(kiara),hx,hy,P.face,2);PixelArt.heroe(lx,'monta',hx-P.face*2,hy+PixelArt.cuerpo().montaY,P.face);}
       else{
-        if(P.pm>=6&&Math.abs(P.vx)>5&&Math.floor(frames/3)%2){lx.globalAlpha=0.4;PixelArt.heroe(lx,poseJugador(),hx-P.face*6,hy,P.face);lx.globalAlpha=1;}
-        PixelArt.heroe(lx,P.derrape?'golpe':poseJugador(),hx,hy,P.face);
+        const esc=tamDibujo();
+        if(P.pm>=6&&Math.abs(P.vx)>5&&Math.floor(frames/3)%2){lx.globalAlpha=0.4;PixelArt.heroe(lx,poseJugador(),hx-P.face*6,hy,P.face,esc);lx.globalAlpha=1;}
+        PixelArt.heroe(lx,P.derrape?'golpe':poseJugador(),hx,hy,P.face,esc);
         if(P.derrape&&frames%4===0)parts.push({x:P.x+P.w/2,y:P.y+P.h-2,vx:-P.face*0.5,vy:-0.6,life:14,color:'#e0e0e0',g:0,r:2});
       }
       if(P.aturdido>0){lx.fillStyle='#ffeb3b';for(let i=0;i<3;i++){const a=P.aturdido*0.15+i*2.09;lx.fillRect(Math.round(hx+Math.cos(a)*7),Math.round(hy+PixelArt.cuerpo().tope-2+Math.sin(a)*2),2,2);}}
@@ -145,6 +150,13 @@ function crearNivelPixel(opc){
     PixelArt.dibujarCabezas(cx,2*scale);   // la cara con foto va en alta resolución, sobre el pixel art
     if(bubble>0)drawSpeech((P.x+P.w/2-cam)*scale,(P.y+P.h+PixelArt.cuerpo().tope*2-camY)*scale,bubble);
     hud();
+  }
+  // Tamaño con el que se dibuja al personaje; parpadea en los últimos 2 s del poder
+  function tamDibujo(){
+    const t=P.gigante>0?P.gigante:P.mini>0?P.mini:0;
+    if(!t)return 1;
+    if(t<120&&Math.floor(frames/5)%2)return 1;
+    return P.gigante>0?2:0.5;
   }
   // Barra inferior estilo consola clásica, con el medidor P (se llena al correr)
   function hud(){
@@ -166,6 +178,9 @@ function crearNivelPixel(opc){
     cx.fillStyle='#fff';
     cx.fillText('🪙×'+coins,236,my);cx.fillText('❤×'+lives,316,my);
     const s=Math.floor(frames/60);cx.fillText('⏱'+Math.floor(s/60)+':'+String(s%60).padStart(2,'0'),386,my);
+    const tam=P.gigante>0?['🌶',P.gigante]:P.mini>0?['🍭',P.mini]:null;
+    if(tam){const x=P.helice>0?570:470;cx.fillStyle='#fff';cx.fillText(tam[0],x,my);cx.fillStyle='#555';cx.fillRect(x+24,my-4,60,8);
+      cx.fillStyle=tam[1]<120?'#ff5252':'#ffb74d';cx.fillRect(x+24,my-4,60*tam[1]/600,8);cx.fillStyle='#fff';}
     if(P.helice>0){const x=470,s=P.helice/900;cx.fillText('🚁',x,my);cx.fillStyle='#555';cx.fillRect(x+24,my-4,60,8);
       cx.fillStyle=P.helice<120?'#ff5252':'#40c4ff';cx.fillRect(x+24,my-4,60*s,8);}
     hudKiara(12);
@@ -190,6 +205,10 @@ function crearNivelPixel(opc){
     if(tema.colinas){const [lejos,cerca]=tema.colinas;
       if(tema.pinos)montanas(camL*0.2,lh-40,lejos[0],lejos[1]);else colinas(camL*0.35,lh-44,24,lejos[0],lejos[1]);
       colinas(camL*0.6+40,lh-28,16,cerca[0],cerca[1]);}
+    if(tema.flores)for(let i=0;i<9;i++){const span=lw+80,x=Math.round((((i*97-camL*0.45)%span)+span)%span-40),h=50+(i%4)*14,base=lh-34;
+      lx.fillStyle='#2e7d32';lx.fillRect(x,base-h,3,h);lx.fillRect(x+3,base-h*0.5,6,2);
+      const col=['#ff7043','#ec407a','#ffee58','#ab47bc'][i%4];for(const [dx,dy] of [[-5,0],[5,0],[0,-5],[0,5]])PixelArt.circulo(lx,x+1+dx,base-h+dy,4,col);
+      PixelArt.circulo(lx,x+1,base-h,3,'#ffd54f');}
     if(tema.nubesAbajo)for(let i=0;i<8;i++){const span=lw+80,x=Math.round((((i*110-camL*0.5)%span)+span)%span-40);nube(x,lh-14-(i%3)*6);}
     if(tema.algas)for(let i=0;i<10;i++){const span=lw+40,x=Math.round((((i*67-camL*0.6)%span)+span)%span-20);
       for(let k=0;k<22;k++){lx.fillStyle=k%4<2?'#2e7d32':'#43a047';lx.fillRect(x+Math.round(Math.sin(frames*0.04+k*0.4+i)*2),lh-30-k,2,1);}}
@@ -218,6 +237,11 @@ function crearNivelPixel(opc){
     const t=tema.tabla||['#8d5524','#c68642','#151515'];
     lx.fillStyle=t[2];lx.fillRect(x,y,16,6);lx.fillStyle=t[0];lx.fillRect(x,y+1,16,4);lx.fillStyle=t[1];lx.fillRect(x,y+1,16,1);
     lx.fillStyle=t[2];lx.fillRect(x+7,y+1,1,4);
+  }
+  function reja(x,y){
+    lx.fillStyle='#151515';for(let i=0;i<16;i+=5)lx.fillRect(x+i,y,3,16);
+    lx.fillStyle='#90a4ae';for(let i=0;i<16;i+=5)lx.fillRect(x+i+1,y,1,16);
+    lx.fillStyle='#151515';lx.fillRect(x,y+7,16,2);lx.fillStyle='#90a4ae';lx.fillRect(x,y+7,16,1);
   }
   function lava(x,y,c){
     const o=Math.round(Math.sin(frames*0.08+c)*1.5);

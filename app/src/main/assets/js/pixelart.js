@@ -159,16 +159,16 @@ const PixelArt=(()=>{
     const a=Math.max(1,Math.round(Math.abs(Math.cos(frames*0.6))*5));
     g.fillStyle='#455a64';g.fillRect(-a,t-6,a*2+1,1);
   }
-  function heroe(g,pose,x,y,dir){
+  function heroe(g,pose,x,y,dir,esc=1){   // esc: 2 gigante, 0.5 mini
     if(pose==='frente')dir=1;              // de frente no se voltea
     const foto=Personajes.foto(pose)||(Personajes.tiene('parado')&&Personajes.foto('parado'));
     if(foto){   // foto real convertida a pixeles
-      const h=26,w=Math.max(4,Math.round(h*foto.width/foto.height));
+      const h=Math.round(26*esc),w=Math.max(4,Math.round(h*foto.width/foto.height));
       g.save();g.imageSmoothingEnabled=false;g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
       g.drawImage(foto,-Math.round(w/2),-h,w,h);g.restore();return;
     }
     const C=cuerpo(),m=C.pose[pose]||C.pose.parado,HY=C.cabeza.y,HR=C.cabeza.r,TY=C.torso;
-    g.save();g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);
+    g.save();g.translate(Math.round(x),Math.round(y));if(dir<0)g.scale(-1,1);if(esc!==1)g.scale(esc,esc);
     const lineas=(segs,col,w)=>{for(const s of segs)linea(g,s[0],s[1],s[2],s[3],col,w);};
     // contorno oscuro
     lineas(m.p,PALETA.k,4);lineas(m.b,PALETA.k,4);
@@ -181,8 +181,8 @@ const PixelArt=(()=>{
     lineas(m.b,'#f8b878',2);
     for(const p of (m.punos||[]))circulo(g,p[0],p[1],2,'#f8b878');
     if(faceCanvas){
-      if(cola)cola.push({x:Math.round(x),y:Math.round(y)+HY,r:HR,dir,alpha:g.globalAlpha,helice});
-      else{g.restore();cabezaHD(g,Math.round(x),Math.round(y)+HY,HR,dir,g.globalAlpha);if(helice)gorroHD(g,Math.round(x),Math.round(y)+HY,HR);return;}
+      if(cola)cola.push({x:Math.round(x),y:Math.round(y)+HY*esc,r:HR*esc,dir,alpha:g.globalAlpha,helice});
+      else{g.restore();cabezaHD(g,Math.round(x),Math.round(y)+HY*esc,HR*esc,dir,g.globalAlpha);if(helice)gorroHD(g,Math.round(x),Math.round(y)+HY*esc,HR*esc);return;}
     } else {
       const k=v=>Math.round(v*HR/9);   // la cara por default se escala con el tamaño de la cabeza
       circulo(g,0,HY,HR+1,PALETA.k);circulo(g,0,HY,HR,'#f8b878');
@@ -262,9 +262,19 @@ const PixelArt=(()=>{
     g.fillStyle='#ffd23f';g.fillRect(cx,base-8,1,3);
     const a=Math.max(1,Math.round(Math.abs(Math.cos(frames*0.5))*6));g.fillStyle='#455a64';g.fillRect(cx-a,base-9,a*2+1,1);
   }
+  // Chile (te hace gigante) y paleta azul (te hace mini) que salen de sus bloques
+  function chile(g,x,y){
+    g.fillStyle=PALETA.k;g.fillRect(x,y+2,13,7);g.fillRect(x+12,y+4,3,4);
+    g.fillStyle='#e53935';g.fillRect(x+1,y+3,11,5);g.fillRect(x+12,y+5,2,2);g.fillStyle='#ff8a80';g.fillRect(x+3,y+4,6,1);
+    g.fillStyle='#2e7d32';g.fillRect(x-2,y+3,3,4);g.fillRect(x-3,y+1,2,3);
+  }
+  function paleta(g,x,y){
+    g.fillStyle='#e0e0e0';g.fillRect(x+6,y+6,1,7);
+    circulo(g,x+6,y+4,5,PALETA.k);circulo(g,x+6,y+4,4,'#29b6f6');g.fillStyle='#ffffff';g.fillRect(x+4,y+2,2,2);g.fillStyle='#0277bd';g.fillRect(x+7,y+5,2,2);
+  }
   function hueso(g,x,y){
     g.fillStyle=PALETA.k;g.fillRect(x-1,y+1,14,6);circulo(g,x+1,y+2,3,PALETA.k);circulo(g,x+1,y+6,3,PALETA.k);circulo(g,x+11,y+2,3,PALETA.k);circulo(g,x+11,y+6,3,PALETA.k);
     g.fillStyle='#fff8e1';g.fillRect(x,y+2,12,4);circulo(g,x+1,y+2,2,'#fff8e1');circulo(g,x+1,y+6,2,'#fff8e1');circulo(g,x+11,y+2,2,'#fff8e1');circulo(g,x+11,y+6,2,'#fff8e1');
   }
-  return {gorroItem,conHelice,tema,tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
+  return {chile,paleta,gorroItem,conHelice,tema,tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
 })();
