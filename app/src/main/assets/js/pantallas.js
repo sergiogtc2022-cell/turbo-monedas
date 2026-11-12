@@ -94,7 +94,14 @@ function ayudaNivel(n){
     kiaraman:'Usa la cruz o desliza el dedo. Come todas las croquetas; el hueso grande asusta a los ratones y Kiara puede atraparlos.',
     trastes:'Mueve el dedo y el personaje lo sigue. Atrapa platos, tazas, vasos y ollas; no atrapes globos de agua ni zapatos. El hueso trae a Kiara.',
     saltarina:'Toca o arrastra el dedo hacia donde quieres que vaya Kiara (o inclina el celular si lo elegiste). Rebota hacia arriba lo más alto que puedas.',
-    memorama:'Toca dos cartas para voltearlas y encuentra los pares. Sube fotos de tu familia en 📸 Fotos.'
+    memorama:'Toca dos cartas para voltearlas y encuentra los pares. Sube fotos de tu familia en 📸 Fotos.',
+    voladora:'Toca la pantalla para que Kiara vuele con su gorro con hélice. Pasa entre las torres de macetas sin tocarlas.',
+    calle:'Toca para avanzar un carril; desliza a los lados o hacia abajo para moverte. Cuidado con los autos, en el río ve sobre los troncos y no te quedes atrás.',
+    raton:'Toca a los ratones antes de que se escondan; el dorado vale 3. ¡A Kiara no le pegues! Dura 60 segundos.',
+    corre:'Corre solo. Toca para saltar (mantén para más alto) y desliza hacia abajo para agacharte debajo de los pájaros. Pisa a los zombies.',
+    ladrillos:'Mueve el dedo para llevar la camita de Kiara y suéltalo para lanzar. Los bloques ? sueltan poderes. Tres vidas.',
+    torre:'Toca para soltar el bloque. Lo que sobresale se cae; si lo pones exacto, la torre crece.',
+    simon:'Mira y escucha los colores que ladra Kiara y repítelos en el mismo orden. Cada ronda agrega uno.'
   }[n];
 }
 // Colores de la miniatura de cada nivel (cielo y suelo) para la rejilla del selector

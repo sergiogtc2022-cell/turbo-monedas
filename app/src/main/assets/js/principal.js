@@ -2,10 +2,12 @@
 'use strict';
 const NIVELES={1:Nivel1,'1px':Nivel1Pixel,px2:Nivel1_2,px3:Nivel1_3,px4:Nivel1_4,
   px5:Nivel2_1,px6:Nivel2_2,px7:Nivel2_3,px8:Nivel2_4,px9:Nivel3_1,px10:Nivel3_2,px11:Nivel3_3,2:Nivel2,3:Nivel3,4:Nivel4,5:Nivel5,
-  kiaraman:MiniKiaraman,trastes:MiniTrastes,saltarina:MiniSaltarina,memorama:MiniMemorama};
+  kiaraman:MiniKiaraman,trastes:MiniTrastes,saltarina:MiniSaltarina,memorama:MiniMemorama,
+  voladora:MiniVoladora,calle:MiniCalle,raton:MiniRaton,corre:MiniCorre,ladrillos:MiniLadrillos,torre:MiniTorre,simon:MiniSimon};
 const CANCION={1:'nivel1','1px':'pixel',px2:'desierto',px3:'cueva',px4:'nieve',
   px5:'torre',px6:'cielo',px7:'castillo',px8:'mina',px9:'agua',px10:'atardecer',px11:'ratones',2:'carrera',3:'viborita',4:'kiara',5:'jefe',
-  kiaraman:'mini',trastes:'mini',saltarina:'kiara',memorama:'tranquila'};
+  kiaraman:'mini',trastes:'mini',saltarina:'kiara',memorama:'tranquila',
+  voladora:'cielo',calle:'mini',raton:'ratones',corre:'atardecer',ladrillos:'pixel',torre:'torre',simon:'tranquila'};
 
 function startLevel(n){
   level=n;

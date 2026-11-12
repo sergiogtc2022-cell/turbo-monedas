@@ -16,7 +16,8 @@ const etiquetaNivel=n=>ETIQUETA_NIVEL[n]||String(n);
 const esPixel=n=>!!ETIQUETA_NIVEL[n];
 const siguienteNivel=n=>{const i=ORDEN_NIVELES.indexOf(n);return i>=0&&i<ORDEN_NIVELES.length-1?ORDEN_NIVELES[i+1]:null;};
 const TOTAL_NIVELES=5;
-const MINIJUEGOS={kiaraman:'Kiara-Man',trastes:'Atrapa los trastes',saltarina:'Kiara saltarina',memorama:'Memorama familiar'};
+const MINIJUEGOS={kiaraman:'Kiara-Man',trastes:'Atrapa los trastes',saltarina:'Kiara saltarina',memorama:'Memorama familiar',
+  voladora:'Kiara voladora',calle:'Cruza la calle',raton:'Pégale al ratón',corre:'Corre sin parar',ladrillos:'Rompe ladrillos',torre:'Torre de bloques',simon:'Kiara dice'};
 const nombreDe=k=>NOMBRES_NIVEL[k]||MINIJUEGOS[k]||k;
 
 const Progreso=(()=>{

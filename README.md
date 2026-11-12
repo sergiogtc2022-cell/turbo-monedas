@@ -1,6 +1,6 @@
 # Merudichis Capuchinis
 
-Juego para Android con la perrita Kiara: modo Historia con 3 mundos pixel art (1: pradera, desierto, cueva, montaña nevada; 2: torre vertical, cielo, castillo con jefe, mina en carrito; 3: bajo el agua, carrera al atardecer con pantalla que avanza sola, casa de los ratones) y los niveles clásicos (plataformas, Gran Premio, La Viborita, Nivel de Kiara y el Zombie Gigante), gorro con hélice para volar un poco, voces del personaje (grabadas o del teléfono), festejo al llegar a la meta, 4 minijuegos (Kiara-Man, Atrapa los trastes, Kiara saltarina y Memorama familiar), música chiptune original, tienda, récords y personajes con fotos reales por pose.
+Juego para Android con la perrita Kiara: modo Historia con 3 mundos pixel art (1: pradera, desierto, cueva, montaña nevada; 2: torre vertical, cielo, castillo con jefe, mina en carrito; 3: bajo el agua, carrera al atardecer con pantalla que avanza sola, casa de los ratones) y los niveles clásicos (plataformas, Gran Premio, La Viborita, Nivel de Kiara y el Zombie Gigante), gorro con hélice para volar un poco, voces del personaje (grabadas o del teléfono), festejo al llegar a la meta, 11 minijuegos (Kiara-Man, Atrapa los trastes, Kiara saltarina, Memorama familiar, Kiara voladora, Cruza la calle, Pégale al ratón, Corre sin parar, Rompe ladrillos, Torre de bloques y Kiara dice), música chiptune original, tienda, récords y personajes con fotos reales por pose.
 
 ## Instalar en el celular
 
@@ -31,6 +31,7 @@ Se instala encima del anterior sin perder fotos ni configuración.
   - `niveles-mundo2.js` mapas de los Mundos 2 y 3 (torre, cielo, castillo, mina, agua, atardecer, casa de los ratones)
   - `pixelart.js` sprites pixel art y dibujo pixel por pixel del personaje y de Kiara
   - `mini-kiaraman.js`, `mini-trastes.js`, `mini-saltarina.js`, `mini-memorama.js` minijuegos
+  - `mini-voladora.js`, `mini-calle.js`, `mini-raton.js`, `mini-corre.js`, `mini-ladrillos.js`, `mini-torre.js`, `mini-simon.js` minijuegos nuevos
   - `musica.js` música chiptune original y fanfarrias de poderes
   - `progreso.js` banco de monedas, récords, estrellas y compartir récord
   - `tienda.js` tienda de accesorios y ventajas
