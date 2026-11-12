@@ -10,7 +10,8 @@ const POSES_HEROE=[
   {id:'golpe',   nombre:'6 Golpeado'},
   {id:'llama',   nombre:'7 Llamando a Kiara'},
   {id:'monta',   nombre:'8 Montando'},
-  {id:'victoria',nombre:'9 Victoria'}
+  {id:'victoria',nombre:'9 Victoria'},
+  {id:'frente',  nombre:'10 De frente (moshi moshi)'}
 ];
 const POSES_KIARA=[
   {id:'k_parada', nombre:'K1 Parada'},
@@ -38,7 +39,8 @@ const Personajes=(()=>{
     golpe:   {p:'M-3 -27 L-7 -2 M3 -27 L6 -2',             b:'M-5 -46 L-16 -40 M5 -46 L14 -58', h:[0,-60],rot:-0.25,boca:'susto'},
     llama:   {p:'M-3 -27 L-4 -2 M3 -27 L4 -2',             b:'M-6 -46 L-9 -30 M5 -46 L11 -52 L7 -57',h:[0,-60],silbido:true},
     monta:   {p:'M0 -27 L10 -22 L10 -8',                   b:'M4 -46 L14 -36',                   h:[1,-60]},
-    victoria:{p:'M-3 -27 L-6 -2 M3 -27 L6 -2',             b:'M-5 -46 L-13 -66 M5 -46 L13 -66',  h:[0,-60],punos:[[-13,-69],[13,-69]],boca:'sonrisa'}
+    victoria:{p:'M-3 -27 L-6 -2 M3 -27 L6 -2',             b:'M-5 -46 L-13 -66 M5 -46 L13 -66',  h:[0,-60],punos:[[-13,-69],[13,-69]],boca:'sonrisa'},
+    frente:  {p:'M-3 -27 L-4 -2 M3 -27 L4 -2',             b:'M-6 -46 L-9 -30 M6 -46 L14 -62',   h:[0,-60],punos:[[15,-65]],boca:'sonrisa',frente:true}
   };
   const PATAS_QUIETA='M8 -9 L9 0 M5 -9 L5 0 M-8 -9 L-9 0 M-5 -9 L-5 0';
   const KIARA={
@@ -76,9 +78,11 @@ const Personajes=(()=>{
     } else {
       ctx.fillStyle='#e0ac69';ctx.beginPath();ctx.arc(hx,hy,9,0,7);ctx.fill();
       ctx.fillStyle='#3b2416';ctx.beginPath();ctx.arc(hx,hy-1,9,Math.PI,0);ctx.closePath();ctx.fill();
-      ctx.fillStyle='#222';ctx.beginPath();ctx.arc(hx+4,hy+1,1.3,0,7);ctx.fill();
+      ctx.fillStyle='#222';ctx.beginPath();
+      if(m.frente){ctx.arc(hx-3.5,hy+1,1.3,0,7);ctx.arc(hx+3.5,hy+1,1.3,0,7);}else ctx.arc(hx+4,hy+1,1.3,0,7);
+      ctx.fill();
       if(m.boca==='susto'){ctx.fillStyle='#5a1a1a';ctx.beginPath();ctx.arc(hx+5,hy+5,2.2,0,7);ctx.fill();}
-      else if(m.boca==='sonrisa'){ctx.strokeStyle='#5a1a1a';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hx+3,hy+3,3,0.2,Math.PI-0.2);ctx.stroke();}
+      else if(m.boca==='sonrisa'){ctx.strokeStyle='#5a1a1a';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(hx+(m.frente?0:3),hy+3,3,0.2,Math.PI-0.2);ctx.stroke();}
     }
     if(eq('lentes')){ctx.fillStyle='#111';ctx.fillRect(hx+1,hy-2,8,4);ctx.fillRect(hx-4,hy-1,5,1.5);}
     if(eq('gorra')){ctx.fillStyle='#1565c0';ctx.beginPath();ctx.arc(hx,hy-3,9.8,Math.PI,0);ctx.closePath();ctx.fill();ctx.fillRect(hx+2,hy-5,12,3);}
@@ -138,7 +142,7 @@ const Personajes=(()=>{
   // ---------- Fotos del jugador ----------
   const fotos={};                       // id de pose → canvas ya recortado
   const SUSTITUTOS={caminaA:['parado'],caminaB:['caminaA','parado'],salto:['cae','parado'],cae:['salto','parado'],
-    golpe:['parado'],llama:['parado'],monta:['parado'],victoria:['parado'],n_lanza:['n_parada'],n_rie:['n_parada'],
+    golpe:['parado'],llama:['parado'],monta:['parado'],victoria:['parado'],frente:['parado'],n_lanza:['n_parada'],n_rie:['n_parada'],
     k_correA:['k_parada'],k_correB:['k_correA','k_parada'],k_ladra:['k_parada'],k_ataca:['k_correA','k_parada']};
   const clave=id=>'mc_foto_'+id;
 

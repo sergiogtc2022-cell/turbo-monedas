@@ -103,7 +103,7 @@ const Nivel3=(()=>{
 
   // Kiara corre por el tablero comiendo bloques por ti y ladrando a los zombies
   function activarKiaraV(){
-    sfx.silbido();Musica.jingle('kiara');hablar('¡Ven, Kiara!');
+    sfx.silbido();Musica.jingle('kiara');Voces.decir('kiara');
     kv={x:0,y:Math.floor(R/2),t:kiaraDura(),mov:0,ladra:0,face:1,anim:0};
     kiaraMsg={texto:'¡Kiara te ayuda a comer!',t:120};
   }

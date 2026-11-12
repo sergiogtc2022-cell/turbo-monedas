@@ -57,14 +57,18 @@ function buildLevel(){
 
   totalCoins=0; for(const row of grid)for(const ch of row)if(ch==='o')totalCoins++;
 }
-const isSolid=ch=>!!ch&&ch!==' '&&'#BS>KQHUXMm'.includes(ch);   // X: hueso enterrado (nivel 4), M: bloque de maceta (nivel 5)
+const isSolid=ch=>!!ch&&ch!==' '&&'#BS>KQHUXMmV'.includes(ch);   // X: hueso enterrado (nivel 4), M: bloque de maceta (nivel 5), V: "?" con el gorro con hélice
+// Piezas que no son sólidas: '=' plataforma que solo se pisa desde arriba, 'L' lava, 'D' puerta que te lleva a su pareja
 function solid(c,r){ if(c<0)return true; if(c>=COLS||r<0||r>=ROWS)return false; return isSolid(grid[r][c]); }
 
 function newPlayer(col){return {x:col*T+4,y:G*T-31,w:22,h:30,vx:0,vy:0,face:1,onGround:false,inv:0,boost:0,coyote:0,jumpBuf:0,jumping:false,anim:0,under:'',llama:0,golpeT:0};}
 let items=[], bumps={}, winT=0;
 let bloqueEspecial=null;
+// Mecánicas extra de los niveles pixel (las define cada nivel en crearNivelPixel; null en los demás)
+let mec=null, plats=[], barras=[], liquido=null, checkpointY=null, flagFila=null, camY=0;
 let modoPixel=false, clavePixel='1px', sueloResbaloso=false;   // clavePixel: récord del nivel pixel; hielo en la montaña nevada      // true en la versión pixel art del nivel 1 (física estilo clásico de 8/16 bits)   // el nivel 5 lo usa para que sus bloques suelten macetas
-function initGame(){bloqueEspecial=null;buildLevel();P=newPlayer(3);coins=0;lives=vidasIniciales();frames=0;checkpoint=3;cam=0;parts=[];items=[];bumps={};winT=0;kiara=null;kiaraMsg.t=0;}
+function initGame(){bloqueEspecial=null;buildLevel();P=newPlayer(3);coins=0;lives=vidasIniciales();frames=0;checkpoint=3;cam=0;parts=[];items=[];bumps={};winT=0;kiara=null;kiaraMsg.t=0;
+  mec=null;plats=[];barras=[];liquido=null;checkpointY=null;flagFila=null;camY=0;}
 
 // ---------- Bloques ----------
 // Dar varios puñetazos seguidos a bloques que no se rompen marea al personaje
@@ -86,6 +90,10 @@ function golpeBloque(c,r){
   } else if(ch==='H'){
     grid[r][c]='U';bumps[c+','+r]=8;sfx.item();Musica.jingle('poder');
     items.push({t:'hueso',x:c*T+4,y:r*T,w:24,h:14,vx:0,vy:0,dir:1,sale:16});
+    Voces.decir('huesito');
+  } else if(ch==='V'){
+    grid[r][c]='U';bumps[c+','+r]=8;sfx.item();
+    items.push({t:'gorro',x:c*T+4,y:r*T,w:24,h:16,vx:0,vy:0,dir:1,sale:16});
   } else {
     if(ch==='U'||ch==='K')bumps[c+','+r]=bumps[c+','+r]||4;
     sfx.tock();golpeDuro();
@@ -97,11 +105,22 @@ function actualizarItems(){
     it.vx=1.8*it.dir;it.vy=Math.min(it.vy+0.5,12);
     moveX(it);if(it.hitWall)it.dir=-it.dir;
     moveY(it);
-    if(aabb(P,it)){it.fuera=true;activarKiara();}
+    if(aabb(P,it)){it.fuera=true;if(it.t==='gorro')ponerGorro();else activarKiara();}
     if(it.y>ROWS*T+40)it.fuera=true;
   }
   items=items.filter(it=>!it.fuera);
   for(const k in bumps)if(--bumps[k]<=0)delete bumps[k];
+}
+// Gorro con hélice: 15 s; manteniendo el salto en el aire sube un poco (gasta impulso) y luego planea
+function ponerGorro(){P.helice=900;P.combust=80;Musica.jingle('poder');sparkle(P.x+11,P.y,'#90caf9',12);}
+function volarConGorro(){
+  if(!(P.helice>0))return;
+  P.helice--;
+  if(P.onGround){P.combust=80;return;}
+  if(input.j){
+    if(P.combust>0&&P.vy>-3.4){P.vy=Math.max(P.vy-0.9,-3.4);P.combust--;if(frames%6===0)parts.push({x:P.x+11,y:P.y-8,vx:(Math.random()-.5)*2,vy:0.5,life:14,color:'#e3f2fd',g:0,r:2});}
+    else if(P.combust<=0&&P.vy>1.4)P.vy=1.4;
+  }
 }
 
 // ---------- Colisiones ----------
@@ -116,6 +135,7 @@ function moveY(e){
   const c0=Math.floor(e.x/T), c1=Math.floor((e.x+e.w-0.01)/T);
   if(e.vy>0){const r=Math.floor((e.y+e.h)/T);let hit=false,under='#';
     for(let c=c0;c<=c1;c++)if(solid(c,r)){hit=true;const ch=grid[r]&&grid[r][c];if(ch==='S')under='S';else if(ch==='>'&&under!=='S')under='>';}
+      else if(grid[r]&&grid[r][c]==='='&&e.y+e.h-e.vy<=r*T+0.5)hit=true;   // se pisa desde arriba, se atraviesa desde abajo
     if(hit){e.y=r*T-e.h;e.vy=0;e.onGround=true;e.under=under;}}
   else if(e.vy<0){
     const r=Math.floor(e.y/T), mid=e.x+e.w/2;let hitC=-1;
@@ -134,13 +154,16 @@ function hurt(src){
   if(coins>0){
     const n=Math.min(coins,16);
     for(let i=0;i<n;i++){const a=-Math.PI*(0.1+0.8*Math.random());parts.push({x:P.x+11,y:P.y+10,vx:Math.cos(a)*(2+Math.random()*4)*(Math.random()<.5?-1:1),vy:Math.sin(a)*7,life:70,color:'#ffd23f',g:.3,r:6,coin:true})}
-    coins=0; P.inv=120; P.vy=-7; P.vx=-P.face*5; P.jumping=false; sfx.hurt();
+    coins=0; P.inv=120; P.vy=-7; P.helice=0; P.vx=-P.face*5; P.jumping=false; sfx.hurt();
   } else die();
 }
 function die(){
   lives--; sfx.hurt();
   if(lives<=0){state='over';Musica.parar();Musica.jingle('perder');showOverlay();return;}
-  P=newPlayer(checkpoint); P.inv=90; kiara=null; cam=Math.max(0,P.x-(W/scale)*0.38);
+  P=newPlayer(checkpoint); P.inv=90; kiara=null; cam=Math.max(0,P.x-(W/scale)*(mec&&mec.auto?0.1:0.38));
+  if(checkpointY!=null)P.y=checkpointY;
+  if(liquido)liquido.y=P.y+P.h+liquido.margen;
+  for(const pl of plats)if(pl.tipo==='cae'){pl.y=pl.y0;pl.vy=0;pl.t=0;pl.pisada=false;}
 }
 function win(){
   const seg=frames/60;
@@ -187,20 +210,44 @@ function fisicaP3(dir,montada){
   const g=P.vy<0?(P.resorte?0.55:(P.jumping&&input.j?0.36:1.0)):0.6;
   P.vy=Math.min(P.vy+g,8.5);
 }
+const COLORES_FIESTA=['#ff5252','#ffd23f','#69f0ae','#40c4ff','#e040fb','#ffffff'];
+function festejo(){
+  const vw=W/scale;
+  if(frames%2===0)parts.push({x:cam+Math.random()*vw,y:camY-6,vx:(Math.random()-.5)*1.5,vy:1+Math.random(),life:150,color:COLORES_FIESTA[frames%6],g:0.02,r:3});
+  if(winT%28===0){const x=cam+vw*(0.2+Math.random()*0.6),y=camY+60+Math.random()*120,col=COLORES_FIESTA[Math.floor(Math.random()*6)];
+    for(let i=0;i<22;i++){const a=i/22*6.28,v=3+Math.random()*1.5;parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:45,color:col,g:0.06,r:3});}
+    beep(700+Math.random()*500,90,.08,'triangle',.05);}
+}
 function step(){
   frames++;
-  if(winT>0){                          // festejo en la meta antes de mostrar resultados
+  if(winT>0){                          // festejo en la meta: brinca, confeti, cohetes y Kiara brinca con él
     winT--;P.vx=0;P.vy=Math.min(P.vy+0.6,14);moveY(P);
+    if(P.onGround&&winT>25){P.vy=-8.5;P.onGround=false;if(winT<140)sfx.jump();}
+    if(kiara&&!kiara.montada){kiara.vx=0;kiara.vy=Math.min((kiara.vy||0)+0.6,14);moveY(kiara);if(kiara.onGround&&winT>25)kiara.vy=-6.5;}
+    festejo();
     for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.life--;}
+    parts=parts.filter(p=>p.life>0);
     if(winT===0)win();
     return;
   }
   if(input.jp){P.jumpBuf=P.aturdido>0?0:8;input.jp=false;}
   let dir=cfg.mode==='auto'?1:(input.r?1:0)-(input.l?1:0);
+  if(mec&&mec.carrito)dir=1;                 // en el carrito de la mina se avanza solo
   if(P.aturdido>0){P.aturdido--;dir=0;}
   const montada=kiaraMontada();
-  if(modoPixel)fisicaP3(dir,montada);else fisicaClasica(dir,montada);
+  if(mec&&mec.agua)fisicaAgua(dir);else if(modoPixel)fisicaP3(dir,montada);else fisicaClasica(dir,montada);
+  if(mec&&mec.carrito&&!(P.aturdido>0)){P.vx=mec.carrito;P.face=1;}
+  volarConGorro();
+  if(mec&&mec.viento)soplarViento();
+  // quieto mucho rato: voltea a la pantalla y saluda
+  if(!dir&&P.onGround&&Math.abs(P.vx)<0.1&&!input.j&&!(mec&&mec.carrito))P.quieto=(P.quieto||0)+1;else P.quieto=0;
+  if(P.quieto===300||(P.quieto>300&&(P.quieto-300)%900===0))Voces.decir('moshi');
+  if(plats.length)moverPlats();
+  const vxAntes=P.vx,pie=P.y+P.h;
   moveX(P); moveY(P);
+  if(plats.length)pisarPlats(pie);
+  // chocar de frente contra una pared
+  if(P.hitWall&&Math.abs(vxAntes)>2.6&&frames-(P.ultChoque||-999)>180&&!(mec&&mec.carrito)){P.ultChoque=frames;Voces.decir('choque');}
   if(P.onGround){P.jumping=false;P.resorte=false;
     if(P.under==='S'){P.vy=-15.5;P.onGround=false;P.coyote=0;P.resorte=true;springT=10;sfx.spring();}
     else if(P.under==='>'){if(P.boost<60){sfx.boost();Musica.jingle('turbo');}P.boost=90;P.vx=Math.max(P.vx,8.5);P.face=1;}
@@ -216,13 +263,20 @@ function step(){
 
   // Monedas, picos, checkpoint
   const c0=Math.floor(P.x/T),c1=Math.floor((P.x+P.w)/T),r0=Math.floor(P.y/T),r1=Math.floor((P.y+P.h)/T);
+  let quemado=false;
   for(let r=r0;r<=r1;r++)for(let c=c0;c<=c1;c++){
     if(r<0||r>=ROWS||c<0||c>=COLS)continue;
     const ch=grid[r][c];
     if(ch==='o'){grid[r][c]=' ';coins++;sfx.coin();sparkle(c*T+16,r*T+16);}
     else if(ch==='^'){if(!montada&&aabb(P,{x:c*T+4,y:r*T+12,w:T-8,h:T-12}))hurt();}
-    else if(ch==='C'){grid[r][c]='c';checkpoint=c;sfx.check();sparkle(c*T+16,r*T,'#7CFC00',12);}
+    else if(ch==='C'){grid[r][c]='c';checkpoint=c;checkpointY=(r+1)*T-31;sfx.check();sparkle(c*T+16,r*T,'#7CFC00',12);}
+    else if(ch==='L'&&!quemado&&aabb(P,{x:c*T+2,y:r*T+12,w:T-4,h:T-12}))quemado=true;
   }
+  if(quemado){Voces.decir('vacio');die();if(state!=='play')return;}
+  if(mec&&mec.puertas)usarPuertas();
+  if(barras.length){girarBarras();if(tocaBarra())hurt();}
+  if(liquido){liquido.y=Math.min(liquido.y-liquido.vel,P.y+P.h+liquido.margen);
+    if(P.y+P.h>liquido.y+8){Voces.decir('vacio');die();}}
   if(state!=='play')return;
 
   // Enemigos
@@ -230,16 +284,27 @@ function step(){
   for(const e of enemies){
     if(!e.alive){e.dead++;if(e.huye){e.x+=e.huye.vx;e.y+=e.huye.vy;e.huye.vy+=0.5;}continue;}
     if(Math.abs(e.x-P.x)>vw+150)continue;
+    if(e.t==='pez'){                           // los peces nadan de un lado a otro sin caer
+      if(e.paralizado>0)e.paralizado--;
+      else{e.x+=e.vx;if(Math.abs(e.x-e.x0)>e.rango)e.vx=-e.vx;e.y=e.y0+Math.sin(frames*0.05+e.x0)*e.amp;}
+    } else {
     e.vy=Math.min(e.vy+0.6,14);
+    if(e.t==='jefe'&&e.onGround&&e.paralizado<=0&&frames%110===0)e.vy=-9;
     if(e.paralizado>0){e.paralizado--;moveY(e);}
     else{
       const ox=e.vx; moveX(e); if(e.hitWall)e.vx=-ox;
       moveY(e);
-      if(e.onGround){const ahead=e.vx>0?e.x+e.w+2:e.x-2; if(!solid(Math.floor(ahead/T),Math.floor((e.y+e.h+4)/T)))e.vx=-e.vx;}
+      if(e.onGround){const ahead=e.vx>0?e.x+e.w+2:e.x-2; const ca=Math.floor(ahead/T),ra=Math.floor((e.y+e.h+4)/T);if(!solid(ca,ra)&&!(grid[ra]&&grid[ra][ca]==='='))e.vx=-e.vx;}
     }
+    }
+    if(e.inv>0){e.inv--;continue;}
     if(e.y>ROWS*T+100){e.alive=false;e.dead=99;}
     if(e.alive&&aabb(P,e)){
-      if((P.vy>1&&P.y+P.h-e.y<18)||P.boost>0||e.paralizado>0){
+      const pisado=P.vy>1&&P.y+P.h-e.y<18&&e.t!=='pez';
+      if(e.hp>1&&(pisado||P.boost>0||e.paralizado>0)){   // jefe: aguanta varios pisotones
+        e.hp--;e.inv=70;e.paralizado=0;e.vx=(e.vx<0?-1:1)*Math.min(3,Math.abs(e.vx)*1.35);P.vy=-9;sfx.stomp();sfx.aturdido();sparkle(e.x+e.w/2,e.y,'#ffeb3b',16);
+      } else if(pisado||P.boost>0||e.paralizado>0){
+        if(e.t==='jefe'){Musica.jingle('acierto');for(let i=0;i<10;i++)parts.push({x:e.x+e.w/2,y:e.y,vx:(Math.random()-.5)*8,vy:-4-Math.random()*5,life:60,color:'#ffd23f',g:0.3,r:6,coin:true});coins+=10;}
         e.alive=false;e.dead=0;sfx.stomp();sparkle(e.x+13,e.y+12,'#d7a6ff',10);
         if(P.boost<=0){P.vy=input.j?-11:-7;P.jumping=input.j;}
       } else hurt('enemy');
@@ -248,11 +313,22 @@ function step(){
   }
   enemies=enemies.filter(e=>e.alive||e.dead<(e.huye?90:30));
 
-  if(P.y>ROWS*T+40){die();if(state!=='play')return;}
-  if(P.x+P.w/2>flagCol*T+14){bajarDeKiara();winT=80;P.vx=0;Musica.parar();Musica.jingle('victoria');return;}
+  if(P.y>ROWS*T+40){Voces.decir('vacio');die();if(state!=='play')return;}
+  if(P.x+P.w/2>flagCol*T+14&&(flagFila==null||P.y<(flagFila+1)*T+4)){bajarDeKiara();winT=150;P.vx=0;P.helice=0;P.quieto=0;Musica.parar();Musica.jingle('victoria');return;}
 
-  const target=P.x+P.w/2-vw*0.38+P.vx*10;
-  cam+=(target-cam)*0.1; cam=Math.max(0,Math.min(cam,COLS*T-vw));
+  if(mec&&mec.auto){                       // la pantalla avanza sola: si te alcanza contra una pared, pierdes
+    cam=Math.min(cam+mec.auto,COLS*T-vw);
+    if(P.x<cam){P.x=cam;if(P.vx<0)P.vx=0;
+      const r0=Math.floor(P.y/T),r1=Math.floor((P.y+P.h-1)/T),cc=Math.floor((P.x+P.w+1)/T);
+      for(let r=r0;r<=r1;r++)if(solid(cc,r)){Voces.decir('zombie',true);die();break;}
+      if(state!=='play')return;}
+    if(P.x+P.w>cam+vw){P.x=cam+vw-P.w;P.vx=Math.min(P.vx,0);}
+  } else {
+    const target=P.x+P.w/2-vw*0.38+P.vx*10;
+    cam+=(target-cam)*0.1; cam=Math.max(0,Math.min(cam,COLS*T-vw));
+  }
+  const vh=VROWS*T,ty=P.y+P.h/2-vh*0.55;
+  camY+=(ty-camY)*0.12;camY=Math.max(0,Math.min(camY,ROWS*T-vh));
 
   for(const p of parts){p.x+=p.vx;p.y+=p.vy;p.vy+=p.g;p.life--;}
   parts=parts.filter(p=>p.life>0);
@@ -261,6 +337,7 @@ function step(){
 // ---------- Dibujo del nivel 1 ----------
 function poseJugador(){
   if(winT>0)return 'victoria';
+  if(P.quieto>300)return 'frente';
   if(P.aturdido>0)return 'golpe';
   if(P.llama>0)return 'llama';
   if(P.golpeT>0)return 'golpe';
@@ -273,7 +350,8 @@ function drawPlayer(){
   const x=P.x+P.w/2, y=P.y+P.h, f=P.face;
   if(P.boost>0){for(let i=1;i<=3;i++){cx.globalAlpha=0.18/i;cx.fillStyle='#ffe066';cx.beginPath();cx.ellipse(x-f*i*12,y-22,14,22,0,0,7);cx.fill();}cx.globalAlpha=1;}
   if(kiaraMontada()){dibujarMontados(f);return;}
-  Personajes.heroe(cx,poseJugador(),x,y,f,46);
+  const pose=poseJugador();
+  Personajes.heroe(cx,pose,x,y,pose==='frente'?1:f,46);
   if(P.aturdido>0)estrellasMareo(x,y-50,P.aturdido);
 }
 function estrellasMareo(x,y,t){

@@ -1,8 +1,17 @@
 // Merudichis Capuchinis · progreso guardado en el celular: monedas del banco, compras, récords y estrellas por nivel
 'use strict';
-const NOMBRES_NIVEL={1:'Plataformas','1px':'Pixel · Pradera',px2:'Pixel · Desierto',px3:'Pixel · Cueva',px4:'Pixel · Montaña nevada',2:'Gran Premio',3:'La Viborita',4:'Nivel de Kiara',5:'Zombie Gigante'};
-const ORDEN_NIVELES=[1,'1px','px2','px3','px4',2,3,4,5];
-const ETIQUETA_NIVEL={'1px':'1-1',px2:'1-2',px3:'1-3',px4:'1-4'};
+const NOMBRES_NIVEL={1:'Plataformas','1px':'Pradera',px2:'Desierto',px3:'Cueva',px4:'Montaña nevada',
+  px5:'La torre',px6:'El cielo',px7:'El castillo',px8:'La mina',px9:'Bajo el agua',px10:'Carrera al atardecer',px11:'Casa de los ratones',
+  2:'Gran Premio',3:'La Viborita',4:'Nivel de Kiara',5:'Zombie Gigante'};
+// Mundos del selector de niveles (todos abiertos); el orden de ORDEN_NIVELES decide el "siguiente nivel"
+const MUNDOS=[
+  {nombre:'Mundo 1',icono:'🌳',niveles:['1px','px2','px3','px4']},
+  {nombre:'Mundo 2',icono:'🏰',niveles:['px5','px6','px7','px8']},
+  {nombre:'Mundo 3',icono:'🌊',niveles:['px9','px10','px11']},
+  {nombre:'Clásicos',icono:'⭐',niveles:[1,2,3,4,5]}
+];
+const ORDEN_NIVELES=MUNDOS.flatMap(m=>m.niveles);
+const ETIQUETA_NIVEL={'1px':'1-1',px2:'1-2',px3:'1-3',px4:'1-4',px5:'2-1',px6:'2-2',px7:'2-3',px8:'2-4',px9:'3-1',px10:'3-2',px11:'3-3'};
 const etiquetaNivel=n=>ETIQUETA_NIVEL[n]||String(n);
 const esPixel=n=>!!ETIQUETA_NIVEL[n];
 const siguienteNivel=n=>{const i=ORDEN_NIVELES.indexOf(n);return i>=0&&i<ORDEN_NIVELES.length-1?ORDEN_NIVELES[i+1]:null;};

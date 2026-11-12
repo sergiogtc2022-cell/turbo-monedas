@@ -78,7 +78,7 @@ const Nivel5=(()=>{
       if(!final&&jefe.hp>0&&aabb(m,jefe)){
         m.fuera=true;romperMaceta(m);jefe.hp--;jefe.flash=40;jefe.pausa=50;sfx.stomp();
         kiaraMsg={texto:jefe.hp>0?`¡Le diste! Le quedan ${jefe.hp}`:'¡Ya casi! ¡Kiara, ven!',t:100};
-        if(jefe.hp<=0){final={kx:-40,t:0,mordio:false};sfx.silbido();Musica.jingle('kiara');hablar('¡Ven, Kiara!');}
+        if(jefe.hp<=0){final={kx:-40,t:0,mordio:false};sfx.silbido();Musica.jingle('kiara');Voces.decir('kiara');}
       } else if(m.y+m.h>=G*T){m.fuera=true;romperMaceta(m);beep(200,80,.1,'square',.05);}
     }
     macetas=macetas.filter(m=>!m.fuera);

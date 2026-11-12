@@ -32,13 +32,12 @@ function cfgHTML(){
   <div class="opt"><b>Volante del Gran Premio<span>${cfg.volante==='inclinar'?'Inclinas el celular como volante':'Arrastras el dedo: más lejos = gira más'}</span></b></div>
   <div class="modes"><button class="pill ${cfg.volante==='dedo'?'':'off'}" data-a="vol-dedo">👆 Dedo</button><button class="pill ${cfg.volante==='inclinar'?'':'off'}" data-a="vol-inclinar">📱 Inclinar</button>
     ${cfg.volante==='inclinar'?`<button class="pill ${cfg.inclInv?'':'off'}" data-a="inclinv">Invertir</button>`:''}</div>
-  <div class="opt"><b>Voz "¡Ora, zombie!"<span>Cuando un enemigo o un auto te choca</span></b>
+  <div class="opt"><b>Voces del personaje<span>Activa o silencia todas las frases</span></b>
     <button class="pill ${cfg.voice?'':'off'}" data-a="voice">${cfg.voice?'Sí':'No'}</button></div>
-  <div class="opt" style="margin-top:6px"><b>Tu propia voz<span>${voiceData?'Usando tu grabación':'Graba "¡Ora, zombie!" con la grabadora del celular y elígela aquí'}</span></b></div>
-  <label class="btn" for="vfile">🎙 ${voiceData?'Cambiar grabación':'Elegir grabación'}<input type="file" accept="audio/*" id="vfile"></label>
-  ${voiceData?'<button class="btn" data-a="delvoice">🗑 Quitar mi grabación</button>':''}
+  <p class="sub" style="margin:10px 0 0">Frases (graba la tuya o usa la voz del teléfono)</p>
+  ${Object.entries(FRASES).map(([id,f])=>`<div class="opt shop"><b>${f.nombre}<span>"${f.muestra}" · ${Voces.tiene(id)?'tu grabación':'voz del teléfono'}</span></b>
+    <span><label class="mini" for="voz_${id}">🎙<input type="file" accept="audio/*" id="voz_${id}" data-voz="${id}"></label><button class="mini" data-a="vp-${id}">▶</button>${Voces.tiene(id)?`<button class="mini off" data-a="vq-${id}">🗑</button>`:''}</span></div>`).join('')}
   <div class="msg" id="vmsg"></div>
-  <button class="btn" data-a="testvoice">🔊 Probar voz</button>
   ${window.AndroidApp?`<div class="opt" style="margin-top:6px"><b>Versión instalada<span>${AndroidApp.version()}</span></b></div>
   <button class="btn" data-a="update">🔄 Buscar actualizaciones</button>`:''}
   <button class="btn go" data-a="back">✔ Listo</button>`;
@@ -81,6 +80,13 @@ function ayudaNivel(n){
     px2:`${ctlPlat} Desierto: igual que el 1-1 pero más largo, con pirámides y pozos de picos.`,
     px3:`${ctlPlat} Cueva: túneles bajos con techo de ladrillo (se rompe con el puño) e islas sobre los pozos.`,
     px4:`${ctlPlat} Montaña nevada: el suelo es hielo y resbala, frena con tiempo. Usa los resortes para subir.`,
+    px5:`${ctlPlat} La torre: sube por las plataformas (se atraviesan desde abajo) antes de que te alcance la lava. La meta está hasta arriba.`,
+    px6:`${ctlPlat} El cielo: brinca de nube en nube. Hay plataformas que se mueven, otras que se caen y ráfagas de viento en contra.`,
+    px7:`${ctlPlat} El castillo: no toques la lava ni las barras de fuego que giran. Al final, el jefe aguanta tres pisotones.`,
+    px8:`${ctlPlat} La mina: el carrito avanza solo; tú solo saltas huecos, picos y enemigos.`,
+    px9:`${ctlPlat} Bajo el agua: cada toque de salto es una brazada. Esquiva a los peces.`,
+    px10:`${ctlPlat} Carrera al atardecer: la pantalla avanza sola. Si te atrapa contra una pared pierdes una vida.`,
+    px11:`${ctlPlat} Casa de los ratones: cada cuarto está cerrado; camina hacia la puerta para pasar al siguiente.`,
     2:`El auto acelera solo. ${cfg.mode==='buttons'?'◀ ▶ girar · ⤒ brincar.':'Mantén el dedo de un lado para girar hacia ese lado; desliza hacia arriba para brincar.'} Monedas = más velocidad máxima, franjas amarillas = turbo, charcos = derrape. 3 vueltas.`,
     3:`${cfg.mode==='buttons'?'◀ ▶ giran a la viborita.':'Desliza el dedo hacia donde quieres que vaya.'} Come bloques para crecer hasta 30. No choques con la pared ni con tu cola. El hueso trae a Kiara.`,
     4:`${ctlPlat} Juegas con Kiara: busca 5 huesos. 👃 olfatea para ver hacia dónde están, quédate quieta encima para excavar y 🐶 ladra para paralizar zombies. Al final llévaselos a tu dueño.`,
@@ -91,15 +97,26 @@ function ayudaNivel(n){
     memorama:'Toca dos cartas para voltearlas y encuentra los pares. Sube fotos de tu familia en 📸 Fotos.'
   }[n];
 }
+// Colores de la miniatura de cada nivel (cielo y suelo) para la rejilla del selector
+const MINIATURA={'1px':['#62a8ff','#2fa82f'],px2:['#ffb36b','#e0b060'],px3:['#221c3d','#4b4b6b'],px4:['#a8d8ff','#ffffff'],
+  px5:['#14275a','#8e8e9e'],px6:['#7cc4ff','#ffffff'],px7:['#260f0f','#b71c1c'],px8:['#261a12','#8d6e63'],
+  px9:['#0a5fa3','#f0d9a0'],px10:['#c0587e','#4a1a38'],px11:['#f3e5ab','#c68642'],
+  1:['#3d9bff','#5fb55c'],2:['#555','#9e9e9e'],3:['#1b5e20','#8bc34a'],4:['#81d4fa','#a1887f'],5:['#4a148c','#212121']};
+const ICONO_NIVEL={'1px':'🌳',px2:'🏜',px3:'💎',px4:'❄',px5:'🗼',px6:'☁',px7:'🏰',px8:'⛏',px9:'🐟',px10:'🌅',px11:'🐭',1:'🧱',2:'🏎',3:'🐍',4:'🐶',5:'🧟'};
 function nivelesHTML(){
   let h='<h1>Niveles</h1>';
-  for(const n of ORDEN_NIVELES){
-    const r=Progreso.record(n);
-    h+=`<div class="opt shop"><b>${etiquetaNivel(n)}. ${NOMBRES_NIVEL[n]}<span>${r?`<span class="estrellas">${textoEstrellas(r.estrellas)}</span> · récord ${fmtSeg(r.tiempo)}`:'Nuevo'}</span></b>
-      <button class="pill" data-a="play${n}">▶ Jugar</button></div>`;
-    if(n===2){
+  for(const m of MUNDOS){
+    h+=`<p class="mundo">${m.icono} ${m.nombre}</p><div class="rejilla">`;
+    for(const n of m.niveles){
+      const r=Progreso.record(n),[c1,c2]=MINIATURA[n]||['#333','#666'];
+      h+=`<button class="casilla" data-a="play${n}" style="background:linear-gradient(${c1} 0 62%,${c2} 62%)">
+        <span class="ico">${ICONO_NIVEL[n]||'▶'}</span><b>${etiquetaNivel(n)}</b><small>${NOMBRES_NIVEL[n]}</small>
+        <span class="estr">${r?textoEstrellas(r.estrellas):'Nuevo'}</span></button>`;
+    }
+    h+='</div>';
+    if(m.niveles.includes(2)){
       const autoBtn=k=>`<button class="pill ${cfg.car===k?'':'off'}" data-a="car-${k}" style="${cfg.car===k?'background:'+(Progreso.equipo('pintura')||AUTOS[k].color)+';color:'+(k==='hatch'&&!Progreso.equipo('pintura')?'#222':'#fff'):''}">${AUTOS[k].nombre}</button>`;
-      h+=`<div class="modes">${autoBtn('sedan')}${autoBtn('compacto')}${autoBtn('hatch')}</div>`;
+      h+=`<p class="sub" style="margin:8px 0 2px">Auto para el Gran Premio</p><div class="modes">${autoBtn('sedan')}${autoBtn('compacto')}${autoBtn('hatch')}</div>`;
     }
   }
   return h+'<button class="btn go" data-a="back">✔ Listo</button>';
@@ -144,7 +161,7 @@ function showOverlay(){
     <label class="btn" for="file">📷 Foto de tu cara<input type="file" accept="image/*" id="file"></label>
     <div class="msg" id="msg"></div>`;
   const hint=t=>`<p class="hint">Gira el celular en horizontal.<br>${t}</p>`;
-  if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · ${TOTAL_NIVELES} niveles · 🪙 ${Progreso.banco}</p>${photo}
+  if(state==='menu') card.innerHTML=`<h1>MERUDICHIS CAPUCHINIS</h1><p class="sub">Con Kiara · ${ORDEN_NIVELES.length} niveles · 🪙 ${Progreso.banco}</p>${photo}
     <button class="btn go" data-a="niveles">▶ Historia</button>
     <button class="btn go" data-a="minijuegos">🎮 Minijuegos</button>
     <button class="btn" data-a="tienda">🛒 Tienda</button>
@@ -159,9 +176,9 @@ function showOverlay(){
 }
 function pauseGame(){state='pause';Musica.parar();showOverlay();}
 function startAudio(){
-  try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();if(voiceData)decodeVoice();Musica.reanudar();}
+  try{if(!ac){ac=new (window.AudioContext||window.webkitAudioContext)();Voces.prepararTodas();Musica.reanudar();}
       if(ac.state==='suspended')ac.resume();}catch(_){}
-  primeTTS();
+  Voces.despertar();
 }
 function goFullscreen(){
   try{const el=document.documentElement;if(!document.fullscreenElement&&el.requestFullscreen){
@@ -184,14 +201,14 @@ overlay.addEventListener('click',e=>{
   if(a.startsWith('mode-')){cfg.mode=a.slice(5);saveCfg();showOverlay();return;}
   if(a==='swap'){cfg.swap=!cfg.swap;saveCfg();showOverlay();return;}
   if(a==='voice'){cfg.voice=!cfg.voice;saveCfg();showOverlay();return;}
-  if(a==='testvoice'){say(true);return;}
+  if(a.startsWith('vp-')){Voces.decir(a.slice(3),true);return;}
+  if(a.startsWith('vq-')){Voces.quitar(a.slice(3));showOverlay();return;}
   if(a==='update'){try{AndroidApp.buscarActualizacion();}catch(_){}return;}
-  if(a==='delvoice'){voiceData=null;voiceBuf=null;try{localStorage.removeItem('tm_voice')}catch(_){}showOverlay();return;}
   if(a==='back'){view='';showOverlay();return;}
   if(a.startsWith('car-')){cfg.car=a.slice(4);saveCfg();showOverlay();return;}
   if(a==='home'){state='menu';view='';startLevel(1);Musica.tocar('menu');showOverlay();return;}
   goFullscreen();
-  if(/^play(\d|1px|px\d)$/.test(a)){view='';const k=a.slice(4);startLevel(/^\d$/.test(k)?+k:k);}
+  if(/^play(\d|1px|px\d+)$/.test(a)){view='';const k=a.slice(4);startLevel(/^\d$/.test(k)?+k:k);}
   else if(a.startsWith('mini-')){view='';startLevel(a.slice(5));}
   else if(a==='restart')startLevel(level);
   for(const k in input)input[k]=false;
@@ -211,20 +228,18 @@ overlay.addEventListener('change',e=>{
     }).catch(()=>{m().textContent='No se pudo leer esa imagen. Prueba con otra (JPG o PNG).';});
     return;
   }
-  if(e.target.id==='vfile'&&e.target.files[0]){
-    const f=e.target.files[0], m=()=>document.getElementById('vmsg');
+  if(e.target.dataset&&e.target.dataset.voz&&e.target.files[0]){
+    const id=e.target.dataset.voz,f=e.target.files[0],m=()=>document.getElementById('vmsg');
     if(f.size>3000000){m().textContent='El audio es muy largo; graba solo 1 o 2 segundos.';return;}
     m().textContent='Cargando audio…';
     const fr=new FileReader();
     fr.onload=async()=>{
-      const prev=voiceData; voiceData=fr.result; startAudio();
-      if(await decodeVoice()){
-        try{localStorage.setItem('tm_voice',voiceData)}catch(_){}
-        showOverlay(); m().textContent='¡Listo! Esa será la voz.'; say(true);
-      } else {voiceData=prev; if(prev)decodeVoice(); m().textContent='No se pudo reproducir ese audio. Ese formato no es compatible; prueba grabarlo con otra app o mándatelo como nota de voz de WhatsApp y guárdalo.';}
+      startAudio();
+      if(await Voces.grabar(id,fr.result)){showOverlay();m().textContent='¡Listo! Así sonará: '+FRASES[id].muestra;Voces.decir(id,true);}
+      else m().textContent='No se pudo reproducir ese audio. Prueba grabarlo con otra app (MP3, M4A u OGG).';
     };
     fr.onerror=()=>{m().textContent='No se pudo leer el archivo.';};
-    fr.readAsDataURL(f); return;
+    fr.readAsDataURL(f);return;
   }
   if(e.target.id!=='file'||!e.target.files[0])return;
   const file=e.target.files[0], msg=document.getElementById('msg');

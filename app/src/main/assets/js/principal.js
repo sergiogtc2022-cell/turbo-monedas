@@ -1,12 +1,15 @@
 // Merudichis Capuchinis · bucle principal y cambio de nivel
 'use strict';
-const NIVELES={1:Nivel1,'1px':Nivel1Pixel,px2:Nivel1_2,px3:Nivel1_3,px4:Nivel1_4,2:Nivel2,3:Nivel3,4:Nivel4,5:Nivel5,
+const NIVELES={1:Nivel1,'1px':Nivel1Pixel,px2:Nivel1_2,px3:Nivel1_3,px4:Nivel1_4,
+  px5:Nivel2_1,px6:Nivel2_2,px7:Nivel2_3,px8:Nivel2_4,px9:Nivel3_1,px10:Nivel3_2,px11:Nivel3_3,2:Nivel2,3:Nivel3,4:Nivel4,5:Nivel5,
   kiaraman:MiniKiaraman,trastes:MiniTrastes,saltarina:MiniSaltarina,memorama:MiniMemorama};
-const CANCION={1:'nivel1','1px':'pixel',px2:'desierto',px3:'cueva',px4:'nieve',2:'carrera',3:'viborita',4:'kiara',5:'jefe',
+const CANCION={1:'nivel1','1px':'pixel',px2:'desierto',px3:'cueva',px4:'nieve',
+  px5:'torre',px6:'cielo',px7:'castillo',px8:'mina',px9:'agua',px10:'atardecer',px11:'ratones',2:'carrera',3:'viborita',4:'kiara',5:'jefe',
   kiaraman:'mini',trastes:'mini',saltarina:'kiara',memorama:'tranquila'};
 
 function startLevel(n){
   level=n;
+  tamMundo(13);
   NIVELES[level].init();
   bubble=0;
   for(const k in input)input[k]=k==='swipe'?null:false;

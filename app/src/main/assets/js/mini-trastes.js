@@ -68,7 +68,7 @@ const MiniTrastes=(()=>{
       const enKiara=kiaraT>0&&!tp.malo&&c.vy>0&&Math.abs(c.y-(piso()-26))<16&&Math.abs(c.x-kx)<30;
       if(enCanasta||enKiara){
         c.fuera=true;
-        if(tp.hueso){kiaraT=kiaraDura();kx=-30;sfx.silbido();Musica.jingle('kiara');hablar('¡Ven, Kiara!');}
+        if(tp.hueso){kiaraT=kiaraDura();kx=-30;sfx.silbido();Musica.jingle('kiara');Voces.decir('kiara');}
         else if(c.t==='globo'){corazones--;sfx.hurt();rotos.push({x:c.x,y:yCanasta,t:40,agua:true});ninaPose='n_rie';poseT=40;}
         else if(c.t==='zapato'){puntos=Math.max(0,puntos-5);lodo=120;beep(150,80,.2,'sawtooth',.05);ninaPose='n_rie';poseT=40;}
         else{puntos+=tp.valor;atrapadas++;sfx.coin();if(tp.pesada)lento=90;}

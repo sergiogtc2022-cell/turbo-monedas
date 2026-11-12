@@ -10,7 +10,7 @@ function activarKiara(){
   const grande=modo==='grande';
   P.llama=45;
   sfx.silbido();Musica.jingle(modo==='grande'?'gigante':'kiara');
-  hablar('¡Ven, Kiara!');
+  Voces.decir('kiara');
   kiara={modo,t:kiaraDura(),x:Math.max(2,cam-40),y:Math.max(0,P.y-60),w:grande?34:24,h:grande?26:18,vx:0,vy:0,
     face:1,anim:0,ladra:0,montada:false,saliendo:false,onGround:false};
   kiaraMsg={texto:modo==='ataca'?'¡Kiara al ataque!':modo==='ladra'?'¡Kiara ladra y paraliza!':'¡Kiara gigante! Súbete',t:150};

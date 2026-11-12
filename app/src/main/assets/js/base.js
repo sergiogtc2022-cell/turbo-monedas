@@ -3,9 +3,11 @@
 const cv=document.getElementById('c');
 let cx=cv.getContext('2d');   // el nivel pixel art lo cambia un momento para dibujar en baja resolución
 const overlay=document.getElementById('overlay'), card=document.getElementById('card'), pauseBtn=document.getElementById('pause');
-const T=32, ROWS=13, G=11;
+const T=32, VROWS=13;           // VROWS: filas visibles en pantalla (la escala se calcula con ellas)
+let ROWS=13, G=11;                // filas del mundo y fila del suelo; la torre vertical usa un mundo más alto
+function tamMundo(filas){ROWS=filas;G=filas-2;}
 let W,H,dpr,scale;
-function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;scale=H/(ROWS*T);}
+function resize(){dpr=Math.min(window.devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;scale=H/(VROWS*T);}
 addEventListener('resize',resize);resize();
 
 // ---------- Estado ----------
@@ -16,39 +18,8 @@ function saveCfg(){try{localStorage.setItem('tm_cfg',JSON.stringify(cfg))}catch(
 function applyCfg(){document.body.classList.toggle('swap',cfg.swap);document.body.classList.toggle('nobtn',cfg.mode!=='buttons');}
 applyCfg();
 let bubble=0, view='';
-// Voz: primero la grabación del jugador; si no hay, la voz del celular
-let voiceData=null, voiceBuf=null, esVoice=null, ttsPrimed=false;
-try{voiceData=localStorage.getItem('tm_voice');}catch(_){}
-function pickVoice(){try{const v=speechSynthesis.getVoices();esVoice=v.find(x=>/es[-_](MX|US|419)/i.test(x.lang))||v.find(x=>/^es/i.test(x.lang))||null;}catch(_){}}
-if(window.speechSynthesis){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(_){}}
-async function decodeVoice(){
-  voiceBuf=null; if(!ac||!voiceData)return false;
-  try{const bin=atob(voiceData.split(',')[1]);const arr=new Uint8Array(bin.length);
-    for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
-    voiceBuf=await ac.decodeAudioData(arr.buffer);return true;}catch(_){voiceBuf=null;return false;}
-}
-function primeTTS(){ // Android necesita "despertar" la voz con un toque del usuario
-  if(ttsPrimed||!window.speechSynthesis)return; ttsPrimed=true;
-  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u);}catch(_){}
-}
-// Dice una frase con la voz del teléfono (no usa la grabación del jugador)
-function hablar(texto){
-  if(!cfg.voice)return;
-  if(window.AndroidVoz){try{if(window.AndroidVoz.hablar(texto))return;}catch(_){}}
-  if(!window.speechSynthesis)return;
-  try{speechSynthesis.cancel();speechSynthesis.resume();
-    const u=new SpeechSynthesisUtterance(texto);u.lang=esVoice?esVoice.lang:'es-MX';if(esVoice)u.voice=esVoice;
-    u.rate=1.1;u.pitch=1.2;speechSynthesis.speak(u);}catch(_){}
-}
-function say(force){
-  if(!cfg.voice&&!force)return;
-  if(voiceBuf&&ac){try{const src=ac.createBufferSource(),g=ac.createGain();g.gain.value=1.2;src.buffer=voiceBuf;src.connect(g).connect(ac.destination);src.start();return;}catch(_){}}
-  if(window.AndroidVoz){try{if(window.AndroidVoz.hablar('¡Ora, zombi!'))return;}catch(_){}}   // voz nativa en la app Android
-  if(!window.speechSynthesis)return;
-  try{speechSynthesis.cancel();speechSynthesis.resume();
-    const u=new SpeechSynthesisUtterance('¡Ora, zombi!');u.lang=esVoice?esVoice.lang:'es-MX';if(esVoice)u.voice=esVoice;
-    u.rate=1.1;u.pitch=1.25;u.volume=1;speechSynthesis.speak(u);}catch(_){}
-}
+// Frases habladas: ver voces.js
+function say(forzar){Voces.decir('zombie',forzar);}
 
 let COLS=0, grid=[], enemies=[], parts=[], P=null, cam=0, state='menu', coins=0, lives=3, frames=0,
     checkpoint=3, totalCoins=0, flagCol=0, springT=0, faceCanvas=null;

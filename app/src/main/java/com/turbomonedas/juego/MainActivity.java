@@ -157,6 +157,16 @@ public class MainActivity extends Activity {
             voz.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "frase");
             return true;
         }
+
+        /** Igual que hablar, con tono y velocidad propios de cada frase (p. ej. la voz tierna o la alargada). */
+        @JavascriptInterface
+        public boolean hablarCon(String texto, float tono, float velocidad) {
+            if (!vozLista) return false;
+            voz.setPitch(tono);
+            voz.setSpeechRate(velocidad);
+            voz.speak(texto, TextToSpeech.QUEUE_FLUSH, null, "frase");
+            return true;
+        }
     }
 
     /** Versión instalada y búsqueda manual de actualizaciones (botón en Configuración). */

@@ -133,7 +133,7 @@ const Nivel4=(()=>{
     enemies=enemies.filter(e=>e.alive||e.dead<(e.huye?90:30));
     if(kiaraMsg.t>0)kiaraMsg.t--;
 
-    if(P.y>ROWS*T+40){caer();if(state!=='play')return;}
+    if(P.y>ROWS*T+40){Voces.decir('vacio');caer();if(state!=='play')return;}
     if(P.x+P.w/2>flagCol*T-24){
       if(huesos>=HUESOS){winT=90;Musica.parar();Musica.jingle('victoria');P.vx=0;return;}
       if(faltanT===0){kiaraMsg={texto:`Te faltan ${HUESOS-huesos} huesos 🦴 (usa 👃 para olfatear)`,t:150};faltanT=200;}

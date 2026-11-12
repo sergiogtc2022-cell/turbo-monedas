@@ -49,7 +49,7 @@ const PixelArt=(()=>{
   const ENEMIGO2=ENEMIGO.slice(0,14).concat(['..kPPkkkkkkPPk..','..kkkk....kkkk..']);
   const MAREADO=ENEMIGO.map((f,i)=>i===7?'.kpkwkppppkwkpk.':i===8?'.kpwkwppppwkwpk.':f);
   const tiles={'#':()=>sprite('tierra',TIERRA),pasto:()=>sprite('pasto',PASTO),B:()=>sprite('ladrillo',LADRILLO),
-    Q:()=>sprite('pregunta',PREGUNTA),H:()=>sprite('pregunta',PREGUNTA),U:()=>sprite('usado',USADO),K:()=>sprite('duro',DURO)};
+    Q:()=>sprite('pregunta',PREGUNTA),H:()=>sprite('pregunta',PREGUNTA),V:()=>sprite('pregunta',PREGUNTA),U:()=>sprite('usado',USADO),K:()=>sprite('duro',DURO)};
 
   // ---------- primitivas pixel a pixel (sin suavizado) ----------
   function linea(g,x0,y0,x1,y1,col,w){
@@ -78,7 +78,8 @@ const PixelArt=(()=>{
       golpe:   {p:[[-1,-5,-3,0],[1,-5,2,0]],           b:[[-3,-10,-9,-8],[3,-10,10,-13]],boca:'o'},
       llama:   {p:[[-1,-5,-2,0],[1,-5,2,0]],           b:[[-3,-10,-5,-5],[3,-10,10,-13],[10,-13,10,-17]]},
       monta:   {p:[[0,-5,4,-4],[4,-4,4,-1]],           b:[[2,-10,7,-7]]},
-      victoria:{p:[[-1,-5,-3,0],[1,-5,3,0]],           b:[[-3,-10,-10,-21],[3,-10,10,-21]],punos:[[-11,-23],[11,-23]],boca:'sonrisa'}}},
+      victoria:{p:[[-1,-5,-3,0],[1,-5,3,0]],           b:[[-3,-10,-10,-21],[3,-10,10,-21]],punos:[[-11,-23],[11,-23]],boca:'sonrisa'},
+      frente:  {p:[[-1,-5,-2,0],[1,-5,2,0]],          b:[[-3,-10,-5,-5],[3,-10,9,-20]],punos:[[10,-22]],boca:'sonrisa',frente:true}}},
     normal:{cabeza:{y:-18,r:5},torso:-13,tope:-25,montaY:-12,pose:{
       parado:  {p:[[-1,-6,-2,0],[1,-6,2,0]],          b:[[-3,-12,-4,-7],[3,-12,4,-7]]},
       caminaA: {p:[[0,-6,3,0],[0,-6,-3,0]],           b:[[-3,-12,-5,-8],[3,-12,5,-9]]},
@@ -88,7 +89,8 @@ const PixelArt=(()=>{
       golpe:   {p:[[-1,-6,-3,0],[1,-6,2,0]],           b:[[-3,-12,-7,-10],[3,-12,6,-16]],boca:'o'},
       llama:   {p:[[-1,-6,-2,0],[1,-6,2,0]],           b:[[-3,-12,-4,-7],[3,-12,5,-15],[5,-15,3,-17]]},
       monta:   {p:[[0,-6,4,-5],[4,-5,4,-1]],           b:[[2,-12,6,-9]]},
-      victoria:{p:[[-1,-6,-3,0],[1,-6,3,0]],           b:[[-3,-12,-5,-20],[3,-12,5,-20]],punos:[[-5,-21],[5,-21]],boca:'sonrisa'}}}
+      victoria:{p:[[-1,-6,-3,0],[1,-6,3,0]],           b:[[-3,-12,-5,-20],[3,-12,5,-20]],punos:[[-5,-21],[5,-21]],boca:'sonrisa'},
+      frente:  {p:[[-1,-6,-2,0],[1,-6,2,0]],          b:[[-3,-12,-4,-7],[3,-12,7,-20]],punos:[[7,-21]],boca:'sonrisa',frente:true}}}
   };
   const cuerpo=()=>CUERPOS[cfg.personaje]||CUERPOS.chibi;
   // Cara preparada: recorte circular, niveles automáticos (estira del 2% al 98% de luz) y más saturación
@@ -118,9 +120,11 @@ const PixelArt=(()=>{
   }
   // Cabezas con foto que se pintan después de ampliar el lienzo de pixeles (coordenadas en pixeles del lienzo bajo)
   let cola=null;
+  let helice=false;                       // gorro con hélice puesto (lo prende el nivel antes de dibujar al personaje)
+  function conHelice(v){helice=!!v;}
   function capturarCabezas(){cola=[];}
   function dibujarCabezas(ctx,k){
-    for(const c of (cola||[]))cabezaHD(ctx,c.x*k,c.y*k,c.r*k,c.dir,c.alpha);
+    for(const c of (cola||[])){cabezaHD(ctx,c.x*k,c.y*k,c.r*k,c.dir,c.alpha);if(c.helice)gorroHD(ctx,c.x*k,c.y*k,c.r*k);}
     cola=null;
   }
   function cabezaHD(ctx,x,y,r,dir,alpha){
@@ -135,7 +139,28 @@ const PixelArt=(()=>{
       ctx.fillRect(-r*0.1,-r*0.16,r*0.2,r*0.08);}
     ctx.restore();
   }
+  // Gorro con hélice en alta resolución (sobre la cara con foto)
+  function gorroHD(ctx,x,y,r){
+    ctx.save();ctx.translate(x,y);
+    ctx.fillStyle=PALETA.k;ctx.beginPath();ctx.arc(0,-r*0.55,r*0.95,Math.PI,0);ctx.closePath();ctx.fill();
+    const fr=['#e53935','#fdd835','#1e88e5','#43a047'];
+    for(let i=0;i<4;i++){ctx.fillStyle=fr[i];ctx.beginPath();ctx.moveTo(0,-r*0.6);ctx.arc(0,-r*0.6,r*0.85,Math.PI+i*Math.PI/4,Math.PI+(i+1)*Math.PI/4);ctx.closePath();ctx.fill();}
+    ctx.fillStyle='#ffd23f';ctx.fillRect(-r*0.08,-r*1.75,r*0.16,r*0.3);
+    const a=Math.abs(Math.cos(frames*0.6));
+    ctx.fillStyle='#455a64';ctx.fillRect(-r*0.9*a,-r*1.85,r*1.8*a,r*0.14);
+    ctx.restore();
+  }
+  // gorro en pixeles cuando no hay foto
+  function gorroPixel(g,HY,HR){
+    const t=HY-HR;
+    g.fillStyle=PALETA.k;g.fillRect(-HR+1,t-2,HR*2-1,4);
+    g.fillStyle='#e53935';g.fillRect(-HR+2,t-1,HR-2,2);g.fillStyle='#1e88e5';g.fillRect(0,t-1,HR-1,2);
+    g.fillStyle='#ffd23f';g.fillRect(0,t-5,1,3);
+    const a=Math.max(1,Math.round(Math.abs(Math.cos(frames*0.6))*5));
+    g.fillStyle='#455a64';g.fillRect(-a,t-6,a*2+1,1);
+  }
   function heroe(g,pose,x,y,dir){
+    if(pose==='frente')dir=1;              // de frente no se voltea
     const foto=Personajes.foto(pose)||(Personajes.tiene('parado')&&Personajes.foto('parado'));
     if(foto){   // foto real convertida a pixeles
       const h=26,w=Math.max(4,Math.round(h*foto.width/foto.height));
@@ -156,16 +181,19 @@ const PixelArt=(()=>{
     lineas(m.b,'#f8b878',2);
     for(const p of (m.punos||[]))circulo(g,p[0],p[1],2,'#f8b878');
     if(faceCanvas){
-      if(cola)cola.push({x:Math.round(x),y:Math.round(y)+HY,r:HR,dir,alpha:g.globalAlpha});
-      else{g.restore();cabezaHD(g,Math.round(x),Math.round(y)+HY,HR,dir,g.globalAlpha);return;}
+      if(cola)cola.push({x:Math.round(x),y:Math.round(y)+HY,r:HR,dir,alpha:g.globalAlpha,helice});
+      else{g.restore();cabezaHD(g,Math.round(x),Math.round(y)+HY,HR,dir,g.globalAlpha);if(helice)gorroHD(g,Math.round(x),Math.round(y)+HY,HR);return;}
     } else {
       const k=v=>Math.round(v*HR/9);   // la cara por default se escala con el tamaño de la cabeza
       circulo(g,0,HY,HR+1,PALETA.k);circulo(g,0,HY,HR,'#f8b878');
-      g.fillStyle='#5a2e0e';g.fillRect(k(-8),HY+k(-9),k(16),k(5));g.fillRect(k(-9),HY+k(-5),Math.max(2,k(4)),k(6));
-      g.fillStyle=PALETA.k;g.fillRect(k(4),HY-1,Math.max(1,k(2)),2);
-      if(m.boca==='o')g.fillRect(k(4),HY+k(5),2,2);else if(m.boca==='sonrisa')g.fillRect(k(2),HY+k(5),Math.max(3,k(5)),1);else g.fillRect(k(3),HY+k(5),Math.max(2,k(4)),1);
+      g.fillStyle='#5a2e0e';g.fillRect(k(-8),HY+k(-9),k(16),k(5));g.fillRect(k(-9),HY+k(-5),Math.max(2,k(4)),k(6));if(m.frente)g.fillRect(k(9)-Math.max(2,k(4))+1,HY+k(-5),Math.max(2,k(4)),k(6));
+      g.fillStyle=PALETA.k;
+      if(m.frente){g.fillRect(k(-4),HY-1,Math.max(1,k(2)),2);g.fillRect(k(3),HY-1,Math.max(1,k(2)),2);g.fillRect(k(-2),HY+k(5),Math.max(3,k(5)),1);}
+      else{g.fillRect(k(4),HY-1,Math.max(1,k(2)),2);
+      if(m.boca==='o')g.fillRect(k(4),HY+k(5),2,2);else if(m.boca==='sonrisa')g.fillRect(k(2),HY+k(5),Math.max(3,k(5)),1);else g.fillRect(k(3),HY+k(5),Math.max(2,k(4)),1);}
       if(Progreso.equipo('gorra')){g.fillStyle='#1565c0';g.fillRect(-HR,HY-HR-1,HR*2,k(5)+1);g.fillRect(k(4),HY+k(-6),k(8),2);}
       if(Progreso.equipo('lentes')){g.fillStyle=PALETA.k;g.fillRect(k(1),HY+k(-2),k(8),2);}
+      if(helice)gorroPixel(g,HY,HR);
     }
     g.restore();
   }
@@ -203,16 +231,40 @@ const PixelArt=(()=>{
     elipse(g,x,y,w+1,7,PALETA.k);elipse(g,x,y,w,6,PALETA.c);
     if(w>1){g.fillStyle=PALETA.C;g.fillRect(x-w+1,y+4,w*2-1,1);g.fillStyle='#fff8c0';g.fillRect(x-1,y-4,1,5);}
   }
+  const RATON=[
+    '................','................','................','................','................','................',
+    '................','....kk..........','...kpPk.........','...kPPkkkkk.....','..kssssssssk....','.kwKsssssssskk..',
+    'kssssssssssss.kk','.kkssssssssssk..','..kLk..kLk.kk...','..kk...kk.......'];
+  const PEZ=[
+    '................','................','................','.....kkkk.......','...kkrrrrkk...kk','..krrrrrrrrk.krk',
+    '.krwKrrrrrrrkrrk','.krKKrrrrrrrrrrk','krrrrrrrrrrrkrrk','.kYYrrrrrrrk.krk','..kYYYrrrrk...kk','...kkkkkkkk.....',
+    '................','................','................','................'];
   function enemigo(g,e,x,y){
+    if(e.t==='raton'){const s=sprite('raton',RATON);g.save();g.translate(Math.round(x),Math.round(y));if(e.vx>0)g.scale(-1,1);
+      if(!e.alive&&e.huye)g.rotate(e.dead*0.25);g.drawImage(s,-8,-16);g.restore();return;}
+    if(e.t==='pez'){const s=sprite('pez',PEZ);g.save();g.translate(Math.round(x),Math.round(y));if(e.vx>0)g.scale(-1,1);
+      if(!e.alive&&e.huye)g.rotate(e.dead*0.25);g.drawImage(s,-8,-12);g.restore();return;}
+    if(e.t==='jefe'){   // jefe: el mismo enemigo al doble de tamaño, con corona
+      g.save();g.translate(Math.round(x),Math.round(y));g.scale(2,2);
+      enemigo(g,Object.assign({},e,{t:''}),0,0);
+      g.fillStyle=PALETA.k;g.fillRect(-5,-17,11,4);g.fillStyle='#ffd23f';g.fillRect(-4,-16,9,2);g.fillRect(-4,-18,1,2);g.fillRect(0,-18,1,2);g.fillRect(4,-18,1,2);
+      g.restore();return;}
     const s=e.paralizado>0?sprite('mareado',MAREADO):Math.floor(frames/10)%2?sprite('enemigo',ENEMIGO):sprite('enemigo2',ENEMIGO2);
     g.save();g.translate(Math.round(x),Math.round(y));
     if(!e.alive&&e.huye){g.rotate(e.dead*0.25);}
     if(e.vx>0)g.scale(-1,1);
     g.drawImage(s,-8,-16);g.restore();
   }
+  function gorroItem(g,x,y){                 // gorro con hélice que sale del bloque (x,y = esquina de arriba)
+    const cx=x+6,base=y+8;
+    g.fillStyle=PALETA.k;g.fillRect(cx-7,base-5,15,6);
+    g.fillStyle='#e53935';g.fillRect(cx-6,base-4,6,4);g.fillStyle='#1e88e5';g.fillRect(cx,base-4,7,4);g.fillStyle='#fdd835';g.fillRect(cx-2,base-4,3,2);
+    g.fillStyle='#ffd23f';g.fillRect(cx,base-8,1,3);
+    const a=Math.max(1,Math.round(Math.abs(Math.cos(frames*0.5))*6));g.fillStyle='#455a64';g.fillRect(cx-a,base-9,a*2+1,1);
+  }
   function hueso(g,x,y){
     g.fillStyle=PALETA.k;g.fillRect(x-1,y+1,14,6);circulo(g,x+1,y+2,3,PALETA.k);circulo(g,x+1,y+6,3,PALETA.k);circulo(g,x+11,y+2,3,PALETA.k);circulo(g,x+11,y+6,3,PALETA.k);
     g.fillStyle='#fff8e1';g.fillRect(x,y+2,12,4);circulo(g,x+1,y+2,2,'#fff8e1');circulo(g,x+1,y+6,2,'#fff8e1');circulo(g,x+11,y+2,2,'#fff8e1');circulo(g,x+11,y+6,2,'#fff8e1');
   }
-  return {tema,tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
+  return {gorroItem,conHelice,tema,tiles,sprite,linea,circulo,elipse,heroe,cuerpo,capturarCabezas,dibujarCabezas,kiara,moneda,enemigo,hueso,PALETA};
 })();
